@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mapa de Rutas</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>#map { height: 400px; }</style>
+</head>
+<body>
+  <h2>Buscar ruta</h2>
+  <input id="origen" placeholder="Origen">
+  <input id="destino" placeholder="Destino">
+  <button onclick="consultarRuta()">Buscar</button>
+  <div id="resultado"></div>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([-16.3989, -71.535], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    const layerGroup = L.layerGroup().addTo(map);
+
+    async function consultarRuta() {
+      const origen = document.getElementById('origen').value;
+      const destino = document.getElementById('destino').value;
+      const res = await fetch('http://localhost:3000/api/ruta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ origen, destino })
+      });
+      const data = await res.json();
+      if (!res.ok) return alert(data.mensaje);
+
+      document.getElementById('resultado').innerHTML =
+        data.ruta.map(r => `<p>${r.linea}: ${r.desde} ➝ ${r.hasta}</p>`).join('');
+
+      layerGroup.clearLayers();
+    }
+  </script>
+</body>
+</html>
