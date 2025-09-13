@@ -5,7 +5,8 @@ const UsuarioModel = require('./models/Usuario');
 // ⚡ Cambia los valores según tu configuración
 const sequelize = new Sequelize('rutasdb', 'postgres', '2521', {
   host: 'localhost',
-  dialect: 'postgres'
+  dialect: 'postgres',
+  logging: false
 });
 
 const Ruta = RutaModel(sequelize);
