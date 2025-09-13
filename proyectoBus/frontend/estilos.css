@@ -1,0 +1,129 @@
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+}
+
+/* Body */
+body {
+  background: #fdfdfd;
+  color: #333;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header */
+header {
+  background: #b40000;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+}
+
+header .logo {
+  height: 50px;
+}
+
+header nav ul {
+  list-style: none;
+  display: flex;
+  gap: 20px;
+}
+
+header nav a {
+  text-decoration: none;
+  color: white;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+header nav a:hover {
+  color: #ffe0e0;
+}
+
+/* Main */
+main {
+  flex: 1;
+  padding: 30px 20px;
+  max-width: 800px;
+  margin: auto;
+  text-align: center;
+}
+
+main h2 {
+  margin-bottom: 20px;
+  color: #b40000;
+}
+
+/* Formulario */
+.form-group {
+  margin: 15px 0;
+  text-align: left;
+}
+
+.form-group label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.input-blanco {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* Botones */
+.form-buttons {
+  margin-top: 20px;
+}
+
+.btn-buscar {
+  background: #b40000;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btn-buscar:hover {
+  background: #8c0000;
+}
+
+/* Resultados */
+.resultado {
+  margin-top: 20px;
+  text-align: left;
+  padding: 15px;
+  background: #fff4f4;
+  border: 1px solid #ffcccc;
+  border-radius: 8px;
+}
+
+/* Mapa */
+#map {
+  height: 400px;
+  margin-top: 20px;
+  border: 2px solid #b40000;
+  border-radius: 12px;
+}
+
+/* Footer */
+footer {
+  background: #b40000;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  margin-top: auto;
+}
