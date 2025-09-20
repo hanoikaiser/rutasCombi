@@ -5,6 +5,11 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 18
 }).addTo(map);
 
+L.polyline([
+  [-16.3820, -71.5500],
+  [-16.3800, -71.5550]
+], {color: 'purple'}).addTo(map);
+
     async function geocodificar(direccion) {
   const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(direccion + ', Arequipa, Perú')}`);
   const data = await res.json();
