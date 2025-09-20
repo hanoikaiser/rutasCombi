@@ -9,6 +9,10 @@ L.polyline([
   [-16.3980, -71.5370],
   [-16.3950, -71.5400]
 ], {color: 'red'}).addTo(map);
+L.polyline([
+  [-16.3820, -71.5500],
+  [-16.3800, -71.5550]
+], {color: 'purple'}).addTo(map);
 
     async function geocodificar(direccion) {
   const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(direccion + ', Arequipa, Perú')}`);
