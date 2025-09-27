@@ -2,32 +2,75 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Login</title>
+  <title>Mapa de Rutas - Arequipa</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f4f9;
+    }
+    header {
+      background: #4CAF50;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    #controls {
+      padding: 1rem;
+      background: #fff;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    #controls input {
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    #controls button {
+      padding: 0.5rem 1rem;
+      border: none;
+      background: #4CAF50;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #controls button:hover {
+      background: #45a049;
+    }
+    #map {
+      height: 500px;
+      width: 100%;
+    }
+    #resultado {
+      padding: 1rem;
+      background: #fff;
+      border-top: 1px solid #ddd;
+    }
+  </style>
 </head>
 <body>
-  <h2>Login</h2>
-  <form id="login-form">
-    <input type="email" id="correo" placeholder="Correo">
-    <input type="password" id="password" placeholder="Contraseña">
-    <button type="submit">Ingresar</button>
-  </form>
-  <p id="mensaje"></p>
+  <header>
+    <h1>Rutas de Transporte Público - Arequipa</h1>
+  </header>
 
-  <script>
-    const form = document.getElementById('login-form');
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
-      const correo = document.getElementById('correo').value;
-      const password = document.getElementById('password').value;
-      const res = await fetch('http://localhost:3000/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ correo, password })
-      });
-      const data = await res.json();
-      if (res.ok) window.location.href = 'pagina4.html';
-      else document.getElementById('mensaje').textContent = data.mensaje;
-    });
-  </script>
+  <div id="controls">
+    <input type="text" id="origen" placeholder="Origen (ej. Av. Parra)">
+    <input type="text" id="destino" placeholder="Destino (ej. Mall Aventura)">
+    <button onclick="consultarRuta()">Buscar Ruta</button>
+  </div>
+
+  <div id="map"></div>
+
+  <div id="resultado">
+    <h3>Resultado:</h3>
+    <p>Ingrese un origen y un destino para ver la ruta.</p>
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="map.js"></script>
 </body>
 </html>
