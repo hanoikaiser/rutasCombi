@@ -1,81 +1,51 @@
-// Inicializar mapa centrado en Arequipa
-const map = L.map('map').setView([-16.3989, -71.5350], 13);
+const map = L.map("map").setView([-16.409047, -71.537451], 13);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: 'OpenStreetMap Arequipa',
-  maxZoom: 18
+// Cargar tiles
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
 }).addTo(map);
 
-// Capa donde se dibujarán rutas y marcadores
-const layerGroup = L.layerGroup().addTo(map);
+// Cargar rutas desde el backend
+async function cargarRutas() {
+  const response = await fetch("http://localhost:3000/api/rutas");
+  const rutas = await response.json();
 
-// 🔹 Función para geocodificar direcciones en Arequipa
-async function geocodificar(direccion) {
-  const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(direccion + ', Arequipa, Perú')}`);
-  const data = await res.json();
-  if (data.length === 0) throw new Error("No se encontró dirección: " + direccion);
-  return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+  rutas.forEach(ruta => {
+    const coords = ruta.coordenadas.map(p => [p.lat, p.lng]);
+    L.polyline(coords, { color: "blue", weight: 4 }).addTo(map);
+    L.marker(coords[0]).addTo(map).bindPopup("Inicio: " + ruta.nombre);
+    L.marker(coords[coords.length - 1]).addTo(map).bindPopup("Fin: " + ruta.nombre);
+  });
 }
 
-// 🔹 Consultar ruta al backend y dibujarla en el mapa
-async function consultarRuta() {
-  const origen = document.getElementById('origen').value;
-  const destino = document.getElementById('destino').value;
+document.getElementById("formRuta").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-  const res = await fetch('http://localhost:3000/api/ruta', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ origen, destino })
+  const nombre = document.getElementById("nombreRuta").value;
+  const coordsTexto = document.getElementById("coordsRuta").value;
+
+  // Transformar texto en array de coordenadas
+  const coordenadas = coordsTexto.split(";").map(c => {
+    const [lat, lng] = c.trim().split(",");
+    return { lat: parseFloat(lat), lng: parseFloat(lng) };
+  });
+
+  const res = await fetch("http://localhost:3000/api/rutas", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nombre, coordenadas })
   });
 
   const data = await res.json();
-  if (!res.ok) return alert(data.mensaje);
+  alert(data.mensaje);
 
-  // Mostrar texto de la ruta
-  document.getElementById('resultado').innerHTML =
-    data.ruta.map(r => `<p><b>${r.linea}</b>: ${r.desde} ➝ ${r.hasta}</p>`).join('');
-
-  // Limpiar mapa
-  layerGroup.clearLayers();
-
-  const colores = ['blue', 'green', 'red', 'orange'];
-  let colorIndex = 0;
-
-  // Dibujar cada tramo de la ruta
-  for (const tramo of data.ruta) {
-    try {
-      const coordDesde = await geocodificar(tramo.desde);
-      const coordHasta = await geocodificar(tramo.hasta);
-
-      // Llamada a OpenRouteService para obtener geometría
-      const orsRes = await fetch(`https://api.openrouteservice.org/v2/directions/foot-walking/geojson`, {
-        method: 'POST',
-        headers: {
-          'Authorization': 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImExNmE5YTc4NTBhZDQ1Mjc4N2NmMzk1MGYyMWFhMzNiIiwiaCI6Im11cm11cjY0In0=',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          coordinates: [
-            [coordDesde[1], coordDesde[0]], // [lon, lat]
-            [coordHasta[1], coordHasta[0]]
-          ]
-        })
-      });
-
-      const orsData = await orsRes.json();
-      if (orsData && orsData.features) {
-        L.geoJSON(orsData, {
-          style: { color: colores[colorIndex % colores.length], weight: 4 }
-        }).addTo(layerGroup);
-      }
-
-      // Agregar marcadores de inicio y fin
-      L.marker(coordDesde).addTo(layerGroup).bindPopup("Inicio: " + tramo.desde);
-      L.marker(coordHasta).addTo(layerGroup).bindPopup("Fin: " + tramo.hasta);
-
-      colorIndex++;
-    } catch (err) {
-      console.error("Error en tramo:", tramo, err);
-    }
+  if (res.ok) {
+    // Dibujar nueva ruta en el mapa
+    const coords = coordenadas.map(p => [p.lat, p.lng]);
+    L.polyline(coords, { color: "green", weight: 4 }).addTo(map);
+    L.marker(coords[0]).addTo(map).bindPopup("Inicio: " + nombre);
+    L.marker(coords[coords.length - 1]).addTo(map).bindPopup("Fin: " + nombre);
   }
-}
+});
+
+cargarRutas();

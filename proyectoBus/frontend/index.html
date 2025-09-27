@@ -70,6 +70,18 @@
     <p>Ingrese un origen y un destino para ver la ruta.</p>
   </div>
 
+  <h3>Agregar nueva ruta</h3>
+  <form id="formRuta">
+    <label>Nombre de la ruta:</label>
+    <input type="text" id="nombreRuta" required>
+
+    <label>Coordenadas (lat,lng separadas por punto y coma):</label>
+    <textarea id="coordsRuta" placeholder="-16.398,-71.535; -16.400,-71.530"></textarea>
+
+    <button type="submit">Guardar Ruta</button>
+  </form>
+  <hr>
+
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="js/map.js"></script>
 </body>
