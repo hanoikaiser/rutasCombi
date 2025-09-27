@@ -19,6 +19,18 @@ L.polyline([
   [-16.3800, -71.5550]
 ], {color: 'purple'}).addTo(map);
 
+function dibujarRutaPersonalizada() {
+  const puntos = [
+    [-16.398, -71.537], // Av. Parra
+    [-16.400, -71.532], // Av. Principal
+    [-16.405, -71.528]  // Mall Aventura
+  ];
+
+  const polyline = L.polyline(puntos, { color: 'red', weight: 5 }).addTo(layerGroup);
+
+  map.fitBounds(polyline.getBounds());
+}
+
     async function geocodificar(direccion) {
   const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(direccion + ', Arequipa, Perú')}`);
   const data = await res.json();
