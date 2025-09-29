@@ -5,19 +5,35 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
 }).addTo(map);
 
-// Cargar rutas desde el backend
+// Grupo de capas para poder limpiar rutas fácilmente
+const layerGroup = L.layerGroup().addTo(map);
+
+// Función para cargar rutas desde el backend
 async function cargarRutas() {
+  layerGroup.clearLayers(); // Limpiar rutas previas
+
   const response = await fetch("http://localhost:3000/api/rutas");
   const rutas = await response.json();
 
   rutas.forEach(ruta => {
     const coords = ruta.coordenadas.map(p => [p.lat, p.lng]);
-    L.polyline(coords, { color: "blue", weight: 4 }).addTo(map);
-    L.marker(coords[0]).addTo(map).bindPopup("Inicio: " + ruta.nombre);
-    L.marker(coords[coords.length - 1]).addTo(map).bindPopup("Fin: " + ruta.nombre);
+    const polyline = L.polyline(coords, { color: "blue", weight: 4 }).addTo(layerGroup);
+
+    L.marker(coords[0]).addTo(layerGroup).bindPopup("Inicio: " + ruta.nombre);
+    L.marker(coords[coords.length - 1]).addTo(layerGroup).bindPopup("Fin: " + ruta.nombre);
+
+    // Ajustar el mapa para mostrar toda la ruta
+    map.fitBounds(polyline.getBounds());
   });
 }
 
+// Llamar al cargar la página
+cargarRutas();
+
+// Botón recargar
+document.getElementById("recargarBtn").addEventListener("click", cargarRutas);
+
+// Manejo del formulario
 document.getElementById("formRuta").addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -40,12 +56,6 @@ document.getElementById("formRuta").addEventListener("submit", async (e) => {
   alert(data.mensaje);
 
   if (res.ok) {
-    // Dibujar nueva ruta en el mapa
-    const coords = coordenadas.map(p => [p.lat, p.lng]);
-    L.polyline(coords, { color: "green", weight: 4 }).addTo(map);
-    L.marker(coords[0]).addTo(map).bindPopup("Inicio: " + nombre);
-    L.marker(coords[coords.length - 1]).addTo(map).bindPopup("Fin: " + nombre);
+    cargarRutas(); // Recargar automáticamente después de insertar
   }
 });
-
-cargarRutas();
