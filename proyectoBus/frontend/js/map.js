@@ -52,6 +52,14 @@ document.getElementById("formRuta").addEventListener("submit", async (e) => {
     body: JSON.stringify({ nombre, coordenadas })
   });
 
+
+  const colores = ["blue", "red", "green", "orange", "purple"];
+rutas.forEach((ruta, i) => {
+  const color = colores[i % colores.length];
+  L.polyline(coords, { color, weight: 4 }).addTo(layerGroup);
+});
+
+
   const data = await res.json();
   alert(data.mensaje);
 
