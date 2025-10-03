@@ -1,4 +1,3 @@
-// Inicializar mapa
 const map = L.map("map").setView([-16.409047, -71.537451], 13);
 
 // Cargar tiles
@@ -6,26 +5,15 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
 }).addTo(map);
 
-// Grupo de capas para rutas
+// Grupo de capas para poder limpiar rutas fácilmente
 const layerGroup = L.layerGroup().addTo(map);
 
-// === Agregar Leaflet Draw ===
-const drawControl = new L.Control.Draw({
-  draw: {
-    polygon: false,
-    rectangle: false,
-    circle: false,
-    marker: false,
-    circlemarker: false,
-    polyline: { shapeOptions: { color: "blue" } }, // solo dibujar rutas
-  },
-  edit: { featureGroup: layerGroup }
-});
-map.addControl(drawControl);
+// Lista temporal para construir la ruta
+let puntosRuta = [];
 
 // Función para cargar rutas desde el backend
 async function cargarRutas() {
-  layerGroup.clearLayers();
+  layerGroup.clearLayers(); // Limpiar rutas previas
 
   const response = await fetch("http://localhost:3000/api/rutas");
   const rutas = await response.json();
@@ -41,33 +29,46 @@ async function cargarRutas() {
     L.marker(coords[0]).addTo(layerGroup).bindPopup("Inicio: " + ruta.nombre);
     L.marker(coords[coords.length - 1]).addTo(layerGroup).bindPopup("Fin: " + ruta.nombre);
 
+    // Ajustar el mapa para mostrar toda la ruta
     map.fitBounds(polyline.getBounds());
   });
 }
 
-// Al cargar la página
+// Llamar al cargar la página
 cargarRutas();
 
 // Botón recargar
 document.getElementById("recargarBtn").addEventListener("click", cargarRutas);
 
-// === Capturar cuando el usuario dibuja una ruta ===
-map.on(L.Draw.Event.CREATED, async (e) => {
-  const layer = e.layer;
-  const coords = layer.getLatLngs();
+// --- NUEVO: construir rutas con clics ---
+map.on("click", (e) => {
+  const { lat, lng } = e.latlng;
 
-  // Preguntar nombre de la ruta
-  const nombre = prompt("Ingrese el nombre de la ruta:");
+  puntosRuta.push([lat, lng]);
 
-  if (!nombre) {
-    alert("Debe ingresar un nombre para la ruta");
+  // Dibujar punto en el mapa
+  L.marker([lat, lng]).addTo(layerGroup).bindPopup(`Punto ${puntosRuta.length}`);
+
+  // Dibujar línea provisional
+  if (puntosRuta.length > 1) {
+    L.polyline(puntosRuta, { color: "gray", dashArray: "5,5" }).addTo(layerGroup);
+  }
+});
+
+// Manejo del formulario
+document.getElementById("formRuta").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const nombre = document.getElementById("nombreRuta").value;
+
+  if (puntosRuta.length < 2) {
+    alert("Debes marcar al menos 2 puntos en el mapa para crear la ruta.");
     return;
   }
 
-  // Transformar a formato backend
-  const coordenadas = coords.map(c => ({ lat: c.lat, lng: c.lng }));
+  // Convertir puntosRuta en el formato {lat, lng}
+  const coordenadas = puntosRuta.map(([lat, lng]) => ({ lat, lng }));
 
-  // Guardar en backend
   const res = await fetch("http://localhost:3000/api/rutas", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -78,6 +79,7 @@ map.on(L.Draw.Event.CREATED, async (e) => {
   alert(data.mensaje);
 
   if (res.ok) {
-    cargarRutas(); // Recargar mapa
+    puntosRuta = []; // Reiniciar lista
+    cargarRutas();   // Recargar rutas del servidor
   }
 });
