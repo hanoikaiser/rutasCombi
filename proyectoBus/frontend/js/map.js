@@ -5,8 +5,11 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
 }).addTo(map);
 
-// Grupo de capas para poder limpiar rutas fácilmente
+// Grupo de capas para mostrar rutas guardadas
 const layerGroup = L.layerGroup().addTo(map);
+
+// Grupo de capas temporal para la ruta en edición
+const tempGroup = L.layerGroup().addTo(map);
 
 // Lista temporal para construir la ruta
 let puntosRuta = [];
@@ -47,12 +50,19 @@ map.on("click", (e) => {
   puntosRuta.push([lat, lng]);
 
   // Dibujar punto en el mapa
-  L.marker([lat, lng]).addTo(layerGroup).bindPopup(`Punto ${puntosRuta.length}`);
+  L.marker([lat, lng]).addTo(tempGroup).bindPopup(`Punto ${puntosRuta.length}`);
 
   // Dibujar línea provisional
   if (puntosRuta.length > 1) {
-    L.polyline(puntosRuta, { color: "gray", dashArray: "5,5" }).addTo(layerGroup);
+    L.polyline(puntosRuta, { color: "gray", dashArray: "5,5" }).addTo(tempGroup);
   }
+});
+
+// --- NUEVO: botón limpiar ruta en edición ---
+document.getElementById("limpiarBtn").addEventListener("click", () => {
+  puntosRuta = [];
+  tempGroup.clearLayers(); // Borra marcadores y líneas provisionales
+  alert("Ruta en edición limpiada.");
 });
 
 // Manejo del formulario
@@ -79,7 +89,8 @@ document.getElementById("formRuta").addEventListener("submit", async (e) => {
   alert(data.mensaje);
 
   if (res.ok) {
-    puntosRuta = []; // Reiniciar lista
-    cargarRutas();   // Recargar rutas del servidor
+    puntosRuta = [];      // Reiniciar lista
+    tempGroup.clearLayers(); // Limpiar el grupo temporal
+    cargarRutas();        // Recargar rutas del servidor
   }
 });
