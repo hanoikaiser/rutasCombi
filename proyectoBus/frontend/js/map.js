@@ -8,15 +8,16 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 // Grupo de capas para mostrar rutas guardadas
 const layerGroup = L.layerGroup().addTo(map);
 
-// Grupo de capas temporal para la ruta en edición
+// Grupo temporal para construir/editar rutas
 const tempGroup = L.layerGroup().addTo(map);
 
-// Lista temporal para construir la ruta
+// Lista temporal de puntos
 let puntosRuta = [];
+let rutaEnEdicion = null; // Guardar ID de ruta si estamos editando
 
 // Función para cargar rutas desde el backend
 async function cargarRutas() {
-  layerGroup.clearLayers(); // Limpiar rutas previas
+  layerGroup.clearLayers();
 
   const response = await fetch("http://localhost:3000/api/rutas");
   const rutas = await response.json();
@@ -32,65 +33,90 @@ async function cargarRutas() {
     L.marker(coords[0]).addTo(layerGroup).bindPopup("Inicio: " + ruta.nombre);
     L.marker(coords[coords.length - 1]).addTo(layerGroup).bindPopup("Fin: " + ruta.nombre);
 
-    // Ajustar el mapa para mostrar toda la ruta
+    // Ajustar el mapa
     map.fitBounds(polyline.getBounds());
+
+    // --- NUEVO: clic en ruta para editar ---
+    polyline.on("click", () => {
+      rutaEnEdicion = ruta.id; // Guardamos ID
+      puntosRuta = coords;     // Cargamos sus puntos
+      tempGroup.clearLayers();
+
+      // Dibujar puntos como edición
+      coords.forEach((p, idx) => {
+        L.marker(p).addTo(tempGroup).bindPopup(`Punto ${idx + 1}`);
+      });
+      L.polyline(coords, { color: "gray", dashArray: "5,5" }).addTo(tempGroup);
+
+      alert(`Editando la ruta: ${ruta.nombre}`);
+    });
   });
 }
 
-// Llamar al cargar la página
+// Inicial
 cargarRutas();
 
 // Botón recargar
 document.getElementById("recargarBtn").addEventListener("click", cargarRutas);
 
-// --- NUEVO: construir rutas con clics ---
+// --- Clic en mapa para añadir puntos ---
 map.on("click", (e) => {
   const { lat, lng } = e.latlng;
 
   puntosRuta.push([lat, lng]);
 
-  // Dibujar punto en el mapa
+  // Dibujar en modo edición
   L.marker([lat, lng]).addTo(tempGroup).bindPopup(`Punto ${puntosRuta.length}`);
-
-  // Dibujar línea provisional
   if (puntosRuta.length > 1) {
     L.polyline(puntosRuta, { color: "gray", dashArray: "5,5" }).addTo(tempGroup);
   }
 });
 
-// --- NUEVO: botón limpiar ruta en edición ---
+// Botón limpiar
 document.getElementById("limpiarBtn").addEventListener("click", () => {
   puntosRuta = [];
-  tempGroup.clearLayers(); // Borra marcadores y líneas provisionales
+  rutaEnEdicion = null; // Cancelamos edición si estaba activa
+  tempGroup.clearLayers();
   alert("Ruta en edición limpiada.");
 });
 
-// Manejo del formulario
+// Formulario guardar
 document.getElementById("formRuta").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const nombre = document.getElementById("nombreRuta").value;
 
   if (puntosRuta.length < 2) {
-    alert("Debes marcar al menos 2 puntos en el mapa para crear la ruta.");
+    alert("Debes marcar al menos 2 puntos en el mapa.");
     return;
   }
 
-  // Convertir puntosRuta en el formato {lat, lng}
   const coordenadas = puntosRuta.map(([lat, lng]) => ({ lat, lng }));
 
-  const res = await fetch("http://localhost:3000/api/rutas", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nombre, coordenadas })
-  });
+  let res;
+  if (rutaEnEdicion) {
+    // --- Actualizar ruta existente ---
+    res = await fetch(`http://localhost:3000/api/rutas/${rutaEnEdicion}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nombre, coordenadas })
+    });
+  } else {
+    // --- Crear nueva ruta ---
+    res = await fetch("http://localhost:3000/api/rutas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nombre, coordenadas })
+    });
+  }
 
   const data = await res.json();
   alert(data.mensaje);
 
   if (res.ok) {
-    puntosRuta = [];      // Reiniciar lista
-    tempGroup.clearLayers(); // Limpiar el grupo temporal
-    cargarRutas();        // Recargar rutas del servidor
+    puntosRuta = [];
+    rutaEnEdicion = null;
+    tempGroup.clearLayers();
+    cargarRutas();
   }
 });
