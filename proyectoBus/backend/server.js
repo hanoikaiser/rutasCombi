@@ -1,52 +1,77 @@
 import express from "express";
-import pkg from "pg";
+import bodyParser from "body-parser";
 import cors from "cors";
+import pkg from "pg";
 
 const { Pool } = pkg;
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json());
 
+// Conexión con PostgreSQL
 const pool = new Pool({
   user: "postgres",
   host: "localhost",
   database: "rutasdb",
-  password: "2521",
+  password: "2521", // 🔑 tu contraseña
   port: 5432,
 });
 
-// Endpoint para obtener todas las rutas
+// -------------------- RUTAS --------------------
+
+// Obtener todas las rutas
 app.get("/api/rutas", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM rutas");
-    res.json(result.rows);
+    const rutas = result.rows.map(r => ({
+      id: r.id,
+      nombre: r.nombre,
+      coordenadas: r.coordenadas, // JSON[]
+    }));
+    res.json(rutas);
   } catch (err) {
     console.error(err);
-    res.status(500).send("Error en la BD");
+    res.status(500).json({ mensaje: "Error al obtener rutas" });
   }
 });
 
-app.listen(3000, () => {
-  console.log("✅ Servidor corriendo en http://localhost:3000");
-});
-
+// Insertar nueva ruta
 app.post("/api/rutas", async (req, res) => {
+  const { nombre, coordenadas } = req.body;
+
   try {
-    const { nombre, coordenadas } = req.body;
-
-    if (!nombre || !coordenadas || coordenadas.length === 0) {
-      return res.status(400).json({ mensaje: "Faltan datos de la ruta" });
-    }
-
-    const result = await pool.query(
-      "INSERT INTO rutas (nombre, coordenadas) VALUES ($1, $2) RETURNING *",
+    await pool.query(
+      "INSERT INTO rutas (nombre, coordenadas) VALUES ($1, $2)",
       [nombre, JSON.stringify(coordenadas)]
     );
-
-    res.json({ mensaje: "Ruta creada con éxito", ruta: result.rows[0] });
+    res.json({ mensaje: "Ruta agregada correctamente" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ mensaje: "Error al guardar la ruta" });
+    res.status(500).json({ mensaje: "Error al insertar ruta" });
   }
+});
+
+// -------------------- NUEVO: Editar ruta --------------------
+app.put("/api/rutas/:id", async (req, res) => {
+  const { id } = req.params;
+  const { nombre, coordenadas } = req.body;
+
+  try {
+    await pool.query(
+      "UPDATE rutas SET nombre = $1, coordenadas = $2 WHERE id = $3",
+      [nombre, JSON.stringify(coordenadas), id]
+    );
+    res.json({ mensaje: "Ruta actualizada correctamente" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ mensaje: "Error al actualizar ruta" });
+  }
+});
+
+// ------------------------------------------------------------
+
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
