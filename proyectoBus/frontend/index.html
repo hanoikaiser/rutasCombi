@@ -28,14 +28,14 @@
       border-radius: 5px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    form input, form textarea {
+    form input {
       width: 100%;
       padding: 0.5rem;
       margin: 0.5rem 0;
       border: 1px solid #ccc;
       border-radius: 5px;
     }
-    form button, #recargarBtn {
+    button {
       padding: 0.5rem 1rem;
       border: none;
       background: #4CAF50;
@@ -43,7 +43,7 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    form button:hover, #recargarBtn:hover {
+    button:hover {
       background: #45a049;
     }
   </style>
@@ -55,21 +55,19 @@
 
   <div id="map"></div>
 
-  <h3>Agregar nueva ruta (haz click en el mapa)</h3>
-  <input type="text" id="nombreRuta" placeholder="Ej: Combi 202 - Av. Parra">
-  <button id="guardarRuta">Guardar Ruta</button>
-
   <form id="formRuta">
+    <h3>Agregar nueva ruta (haz clic en el mapa para marcar los puntos)</h3>
+    
     <label>Nombre de la ruta:</label>
-    <input type="text" id="nombreRuta" required>
+    <input type="text" id="nombreRuta" placeholder="Ej: Combi 202 - Av. Parra" required>
 
-    <label>Coordenadas (lat,lng separadas por punto y coma):</label>
-    <textarea id="coordsRuta" placeholder="-16.398,-71.535; -16.400,-71.530"></textarea>
-
-    <button type="submit">Guardar Ruta</button>
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+      <button type="submit">💾 Guardar Ruta</button>
+      <button type="button" id="limpiarBtn" style="background:#e74c3c;">🧹 Limpiar</button>
+    </div>
   </form>
 
-  <button id="recargarBtn" style="margin:1rem;">Recargar Rutas</button>
+  <button id="recargarBtn" style="margin:1rem;">🔄 Recargar Rutas</button>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="js/map.js"></script>
