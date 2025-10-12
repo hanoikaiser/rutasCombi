@@ -2,32 +2,74 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Login</title>
+  <title>Mapa de Rutas - Arequipa</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f4f9;
+    }
+    header {
+      background: #4CAF50;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    #map {
+      height: 500px;
+      width: 100%;
+    }
+    form {
+      background: #fff;
+      padding: 1rem;
+      margin: 1rem;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    form input {
+      width: 100%;
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      border: none;
+      background: #4CAF50;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #45a049;
+    }
+  </style>
 </head>
 <body>
-  <h2>Login</h2>
-  <form id="login-form">
-    <input type="email" id="correo" placeholder="Correo">
-    <input type="password" id="password" placeholder="Contraseña">
-    <button type="submit">Ingresar</button>
-  </form>
-  <p id="mensaje"></p>
+  <header>
+    <h1>Rutas de Transporte Público - Arequipa</h1>
+  </header>
 
-  <script>
-    const form = document.getElementById('login-form');
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
-      const correo = document.getElementById('correo').value;
-      const password = document.getElementById('password').value;
-      const res = await fetch('http://localhost:3000/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ correo, password })
-      });
-      const data = await res.json();
-      if (res.ok) window.location.href = 'pagina4.html';
-      else document.getElementById('mensaje').textContent = data.mensaje;
-    });
-  </script>
+  <div id="map"></div>
+
+  <form id="formRuta">
+    <h3>Agregar nueva ruta (haz clic en el mapa para marcar los puntos)</h3>
+    
+    <label>Nombre de la ruta:</label>
+    <input type="text" id="nombreRuta" placeholder="Ej: Combi 202 - Av. Parra" required>
+
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+      <button type="submit">💾 Guardar Ruta</button>
+      <button type="button" id="limpiarBtn" style="background:#e74c3c;">🧹 Limpiar</button>
+    </div>
+  </form>
+
+  <button id="recargarBtn" style="margin:1rem;">🔄 Recargar Rutas</button>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="js/map.js"></script>
 </body>
 </html>

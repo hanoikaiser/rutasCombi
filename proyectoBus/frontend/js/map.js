@@ -1,77 +1,116 @@
-const map = L.map('map').setView([-16.3989, -71.5350], 13);
+const map = L.map("map").setView([-16.409047, -71.537451], 13);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: 'OpenStreetMap Arequipa',
-  maxZoom: 18
+// Tiles
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
 }).addTo(map);
 
-L.polyline([
-  [-16.3980, -71.5370],
-  [-16.3950, -71.5400]
-  [
-  [-16.3989, -71.5350],
-  [-16.4100, -71.5300],
-  [-16.4250, -71.5220]
-]
-], {color: 'red'}).addTo(map);
-L.polyline([
-  [-16.3820, -71.5500],
-  [-16.3800, -71.5550]
-], {color: 'purple'}).addTo(map);
+const layerGroup = L.layerGroup().addTo(map);
+const tempGroup = L.layerGroup().addTo(map);
 
-    async function geocodificar(direccion) {
-  const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(direccion + ', Arequipa, Perú')}`);
-  const data = await res.json();
-  if (data.length === 0) throw new Error("No se encontró dirección: " + direccion);
-  return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-}
+let puntosRuta = [];
+let rutaEnEdicion = null;
 
-async function consultarRuta() {
-  const origen = document.getElementById('origen').value;
-  const destino = document.getElementById('destino').value;
-  const res = await fetch('http://localhost:3000/api/ruta', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ origen, destino })
+// Cargar rutas desde backend
+async function cargarRutas() {
+  layerGroup.clearLayers();
+  const response = await fetch("http://localhost:3000/api/rutas");
+  const rutas = await response.json();
+
+  const colores = ["blue", "red", "green", "orange", "purple"];
+  const bounds = [];
+
+  rutas.forEach((ruta, i) => {
+    const coordsArray = typeof ruta.coordenadas === "string"
+      ? JSON.parse(ruta.coordenadas)
+      : ruta.coordenadas;
+    const coords = coordsArray.map(p => [p.lat, p.lng]);
+    const color = colores[i % colores.length];
+
+    const polyline = L.polyline(coords, { color, weight: 4 }).addTo(layerGroup);
+
+    L.marker(coords[0]).addTo(layerGroup).bindPopup("Inicio: " + ruta.nombre);
+    L.marker(coords[coords.length - 1]).addTo(layerGroup).bindPopup("Fin: " + ruta.nombre);
+
+    bounds.push(...coords);
+
+    // Click para editar
+    polyline.on("click", () => {
+      rutaEnEdicion = ruta.id;
+      puntosRuta = coords;
+      tempGroup.clearLayers();
+
+      coords.forEach((p, idx) => {
+        L.marker(p).addTo(tempGroup).bindPopup(`Punto ${idx + 1}`);
+      });
+      L.polyline(coords, { color: "gray", dashArray: "5,5" }).addTo(tempGroup);
+
+      document.getElementById("tituloForm").textContent = `Editando: ${ruta.nombre}`;
+    });
   });
 
-  const data = await res.json();
-  if (!res.ok) return alert(data.mensaje);
-
-  document.getElementById('resultado').innerHTML =
-    data.ruta.map(r => `<p>${r.linea}: ${r.desde} ➝ ${r.hasta}</p>`).join('');
-
-  layerGroup.clearLayers();
-  const colores = ['blue', 'green', 'red', 'orange'];
-
-  let colorIndex = 0;
-  for (const tramo of data.ruta) {
-    const coordDesde = await geocodificar(tramo.desde);
-    const coordHasta = await geocodificar(tramo.hasta);
-
-    const orsRes = await fetch(`https://api.openrouteservice.org/v2/directions/foot-walking/geojson`, {
-      method: 'POST',
-      headers: {
-        'Authorization': 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImExNmE5YTc4NTBhZDQ1Mjc4N2NmMzk1MGYyMWFhMzNiIiwiaCI6Im11cm11cjY0In0=',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        coordinates: [
-          [coordDesde[1], coordDesde[0]], // lon, lat
-          [coordHasta[1], coordHasta[0]]
-        ]
-      })
-    });
-
-    const orsData = await orsRes.json();
-    if (orsData && orsData.features) {
-      L.geoJSON(orsData, {
-        style: { color: colores[colorIndex % colores.length], weight: 4 }
-      }).addTo(layerGroup);
-    }
-
-    L.marker(coordDesde).addTo(layerGroup).bindPopup("Inicio: " + tramo.desde);
-    L.marker(coordHasta).addTo(layerGroup).bindPopup("Fin: " + tramo.hasta);
-    colorIndex++;
-  }
+  if (bounds.length > 0) map.fitBounds(bounds);
 }
+
+cargarRutas();
+
+document.getElementById("recargarBtn").addEventListener("click", cargarRutas);
+
+map.on("click", (e) => {
+  const { lat, lng } = e.latlng;
+  puntosRuta.push([lat, lng]);
+  tempGroup.clearLayers();
+
+  puntosRuta.forEach((p, idx) => {
+    L.marker(p).addTo(tempGroup).bindPopup(`Punto ${idx + 1}`);
+  });
+  if (puntosRuta.length > 1) {
+    L.polyline(puntosRuta, { color: "gray", dashArray: "5,5" }).addTo(tempGroup);
+  }
+});
+
+document.getElementById("limpiarBtn").addEventListener("click", () => {
+  puntosRuta = [];
+  rutaEnEdicion = null;
+  tempGroup.clearLayers();
+  document.getElementById("tituloForm").textContent = "Agregar nueva ruta";
+});
+
+document.getElementById("formRuta").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const nombre = document.getElementById("nombreRuta").value;
+
+  if (puntosRuta.length < 2) {
+    alert("Debes marcar al menos 2 puntos en el mapa.");
+    return;
+  }
+
+  const coordenadas = puntosRuta.map(([lat, lng]) => ({ lat, lng }));
+  let res;
+
+  if (rutaEnEdicion) {
+    res = await fetch(`http://localhost:3000/api/rutas/${rutaEnEdicion}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nombre, coordenadas }),
+    });
+  } else {
+    res = await fetch("http://localhost:3000/api/rutas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nombre, coordenadas }),
+    });
+  }
+
+  const data = await res.json();
+  alert(data.mensaje);
+
+  if (res.ok) {
+    puntosRuta = [];
+    rutaEnEdicion = null;
+    tempGroup.clearLayers();
+    document.getElementById("tituloForm").textContent = "Agregar nueva ruta";
+    cargarRutas();
+  }
+});
