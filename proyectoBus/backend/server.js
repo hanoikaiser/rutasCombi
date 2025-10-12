@@ -86,6 +86,17 @@ app.delete("/api/rutas/:id", async (req, res) => {
   }
 });
 
+app.delete('/api/deleteRuta/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('DELETE FROM rutas WHERE id = $1', [id]);
+    res.status(200).json({ message: 'Ruta eliminada correctamente' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al eliminar la ruta' });
+  }
+});
+
 // ------------------------------------------------------------
 
 const PORT = 3000;

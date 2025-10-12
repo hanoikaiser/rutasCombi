@@ -6,19 +6,50 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
   <style>
-    #map { height: 500px; margin-top: 10px; }
-    body { font-family: sans-serif; margin: 20px; }
-    select, button { margin-right: 10px; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f9;
+      margin: 0;
+      padding: 20px;
+    }
+    h2 {
+      color: #333;
+    }
+    #map {
+      height: 500px;
+      margin-top: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    select, button {
+      margin-right: 10px;
+      padding: 8px 12px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+    }
+    select {
+      background: white;
+      border: 1px solid #ccc;
+    }
+    button {
+      color: white;
+    }
+    #editarRutaBtn { background: #007bff; }
+    #guardarRutaBtn { background: #28a745; }
+    #eliminarRutaBtn { background: #dc3545; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
   </style>
 </head>
 <body>
-  <h2>Editor de rutas</h2>
+  <h2>Editor de rutas de transporte público - Arequipa</h2>
 
   <label for="rutasSelect">Seleccionar ruta:</label>
   <select id="rutasSelect"></select>
 
   <button id="editarRutaBtn">Editar ruta</button>
   <button id="guardarRutaBtn" disabled>Guardar cambios</button>
+  <button id="eliminarRutaBtn" disabled>Eliminar ruta</button>
 
   <div id="map"></div>
 
