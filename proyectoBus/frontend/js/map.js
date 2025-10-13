@@ -37,17 +37,59 @@ map.on(L.Draw.Event.CREATED, (event) => {
 
 // Cargar rutas
 async function cargarRutas() {
-  const res = await fetch('http://localhost:3000/api/rutas');
-  rutas = await res.json();
-  const select = document.getElementById('rutasSelect');
-  select.innerHTML = '<option value="">-- Selecciona una ruta --</option>';
-  rutas.forEach(r => {
-    const opt = document.createElement('option');
-    opt.value = r.id;
-    opt.textContent = r.nombre;
-    select.appendChild(opt);
+  layerGroup.clearLayers();
+
+  const response = await fetch("http://localhost:3000/api/rutas");
+  const rutas = await response.json();
+
+  const colores = ["blue", "red", "green", "orange", "purple"];
+
+  rutas.forEach((ruta, i) => {
+    const coords = ruta.coordenadas.map(p => [p.lat, p.lng]);
+    const color = colores[i % colores.length];
+
+    // --- Dibujar la línea ---
+    const polyline = L.polyline(coords, { color, weight: 4 }).addTo(layerGroup);
+
+    // --- NUEVO: Íconos personalizados de inicio y fin ---
+    const iconoInicio = L.icon({
+      iconUrl: 'img/inicio.png', // Asegúrate de tener esta imagen en /frontend/img/
+      iconSize: [32, 32],
+    });
+
+    const iconoFin = L.icon({
+      iconUrl: 'img/fin.png', // También en /frontend/img/
+      iconSize: [32, 32],
+    });
+
+    // Agregar los marcadores de inicio y fin
+    L.marker(coords[0], { icon: iconoInicio })
+      .addTo(layerGroup)
+      .bindPopup("Inicio: " + ruta.nombre);
+
+    L.marker(coords[coords.length - 1], { icon: iconoFin })
+      .addTo(layerGroup)
+      .bindPopup("Fin: " + ruta.nombre);
+
+    // --- Ajustar el mapa a la ruta ---
+    map.fitBounds(polyline.getBounds());
+
+    // --- Permitir clic para editar ---
+    polyline.on("click", () => {
+      rutaEnEdicion = ruta.id;
+      puntosRuta = coords;
+      tempGroup.clearLayers();
+
+      coords.forEach((p, idx) => {
+        L.marker(p).addTo(tempGroup).bindPopup(`Punto ${idx + 1}`);
+      });
+      L.polyline(coords, { color: "gray", dashArray: "5,5" }).addTo(tempGroup);
+
+      alert(`Editando la ruta: ${ruta.nombre}`);
+    });
   });
 }
+
 
 // Mostrar ruta seleccionada
 document.getElementById('rutasSelect').addEventListener('change', (e) => {
