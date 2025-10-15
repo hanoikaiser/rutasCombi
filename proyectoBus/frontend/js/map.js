@@ -159,4 +159,40 @@ document.getElementById('eliminarRutaBtn').addEventListener('click', async () =>
   }
 });
 
+// 🗂️ Cargar rutas en el panel lateral
+async function cargarRutas() {
+  const lista = document.getElementById("listaRutas");
+  lista.innerHTML = "<li>Cargando rutas...</li>";
+
+  try {
+    const res = await fetch("/api/rutas");
+    const rutas = await res.json();
+
+    lista.innerHTML = "";
+
+    rutas.forEach((ruta) => {
+      const item = document.createElement("li");
+      item.textContent = ruta.nombre;
+      item.onclick = () => mostrarRutaEnMapa(ruta);
+      lista.appendChild(item);
+    });
+  } catch (error) {
+    console.error("Error al cargar rutas:", error);
+    lista.innerHTML = "<li>Error al cargar rutas</li>";
+  }
+}
+
+// 🗺️ Mostrar una ruta en el mapa al seleccionarla
+function mostrarRutaEnMapa(ruta) {
+  if (!ruta.coordenadas) return;
+  const coords = JSON.parse(ruta.coordenadas);
+  const polyline = L.polyline(coords, { color: 'blue' }).addTo(map);
+  map.fitBounds(polyline.getBounds());
+}
+
+// Inicializar al cargar
+window.addEventListener("DOMContentLoaded", cargarRutas);
+document.getElementById("recargarBtn").addEventListener("click", cargarRutas);
+
+
 cargarRutas();
