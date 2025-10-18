@@ -2,20 +2,96 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Mapa de Rutas</title>
-  <link rel="stylesheet" href="estilos.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css"/>
-  <style>#map { height: 400px; }</style>
+  <title>Sistema de Rutas Inteligentes - Arequipa</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to bottom right, #004d7a, #008793);
+      color: white;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }
+
+    header {
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    main {
+      background: rgba(255,255,255,0.1);
+      padding: 30px;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    h2 {
+      margin-bottom: 10px;
+      color: #ffde59;
+    }
+
+    p {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      color: #e8e8e8;
+    }
+
+    button {
+      background-color: #ffde59;
+      color: #004d7a;
+      border: none;
+      padding: 12px 25px;
+      font-size: 1rem;
+      border-radius: 10px;
+      margin-top: 20px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #ffd633;
+    }
+
+    footer {
+      position: absolute;
+      bottom: 10px;
+      font-size: 0.9rem;
+      color: #e0e0e0;
+    }
+  </style>
 </head>
 <body>
-  <h2>Buscar ruta</h2>
-  <input id="origen" placeholder="Origen">
-  <input id="destino" placeholder="Destino">
-  <button onclick="consultarRuta()">Buscar</button>
-  <div id="resultado"></div>
-  <div id="map"></div>
+  <header>🚌 Sistema de Rutas Inteligentes - Arequipa</header>
 
-  <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
+  <main>
+    <h2>Bienvenido al Sistema</h2>
+    <p>
+      Este sistema permitirá a los ciudadanos de Arequipa encontrar la mejor ruta 
+      de transporte público entre dos puntos de la ciudad.
+    </p>
+    <p>
+      Podrás ver el mapa de Arequipa, usar tu ubicación actual como punto de partida, 
+      y descubrir qué líneas de transporte te acercan más rápido a tu destino.
+    </p>
 
+    <button onclick="irARutas()">Explorar rutas</button>
+  </main>
+
+  <footer>Desarrollado como parte del proyecto de Rutas Inteligentes © 2025</footer>
+
+  <script>
+    function irARutas() {
+      window.location.href = "rutas.html"; // Página funcional real del sistema
+    }
+  </script>
 </body>
 </html>
