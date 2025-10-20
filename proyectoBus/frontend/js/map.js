@@ -191,3 +191,9 @@ document.getElementById('eliminarRutaBtn')?.addEventListener('click', async () =
 });
 
 // Inicial
+//Ejecutar codigo para la localizacion en el mapa
+//Editar las rutas de los vehiculos
+//Agregar nuevas rutas por medio de un mapa interactivo en vez de coordenadas
+//Previsualizar las rutas en un mapa para confirmar sus paramteros
+//Planificar rutas respecto a los destinos mas concurridos
+//Fijar puntos intermedios para abordar distintos vehiculos
