@@ -44,7 +44,7 @@
       padding: 40px 50px;
       border-radius: 20px;
       width: 90%;
-      max-width: 900px;
+      max-width: 1000px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.3);
       text-align: center;
       margin-top: 30px;
@@ -122,8 +122,53 @@
       50% { transform: translateY(-10px); }
     }
 
+    .seccion-visual {
+      margin-top: 60px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-around;
+      text-align: left;
+      gap: 40px;
+    }
+
+    .texto-visual {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .texto-visual h3 {
+      color: #ffde59;
+      font-size: 1.6rem;
+      margin-bottom: 10px;
+    }
+
+    .texto-visual p {
+      color: #eaeaea;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .imagen-visual {
+      flex: 1;
+      min-width: 300px;
+      text-align: center;
+    }
+
+    .imagen-visual img {
+      width: 100%;
+      max-width: 420px;
+      border-radius: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+      transition: transform 0.4s ease;
+    }
+
+    .imagen-visual img:hover {
+      transform: scale(1.03);
+    }
+
     footer {
-      margin-top: 40px;
+      margin-top: 60px;
       padding: 20px;
       text-align: center;
       background: rgba(0, 0, 0, 0.2);
@@ -164,7 +209,7 @@
       <div class="card">
         <div class="icono">🚏</div>
         <h3>Paraderos Inteligentes</h3>
-        <p>Consulta paraderos, inicios y finales de ruta con iconos visuales claros y actualizados.</p>
+        <p>Consulta paraderos, inicios y finales de ruta con íconos visuales claros y actualizados.</p>
       </div>
 
       <div class="card">
@@ -177,6 +222,21 @@
         <div class="icono">📡</div>
         <h3>Geolocalización</h3>
         <p>Próximamente: encuentra las mejores rutas desde tu ubicación actual con un solo clic.</p>
+      </div>
+    </section>
+
+    <!-- 🗺️ Nueva sección visual -->
+    <section class="seccion-visual">
+      <div class="texto-visual">
+        <h3>Una nueva forma de moverse por Arequipa</h3>
+        <p>
+          Nuestro mapa interactivo te permitirá comprender cómo se conectan las líneas de transporte en tiempo real.
+          Con información actualizada sobre las principales rutas y sus paraderos, tendrás una herramienta poderosa para planificar tus desplazamientos o gestionar las líneas del transporte urbano.
+        </p>
+      </div>
+
+      <div class="imagen-visual">
+        <img src="img/mapa-arequipa.jpg" alt="Mapa de rutas de Arequipa">
       </div>
     </section>
   </main>
