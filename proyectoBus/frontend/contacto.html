@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Contacto | Sistema de Rutas Arequipa</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to bottom right, #0d1b2a, #1b263b);
+      color: #f0f0f0;
+      min-height: 100vh;
+    }
+
+    nav {
+      background: rgba(13, 27, 42, 0.95);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 20px;
+      margin: 0;
+    }
+
+    nav a {
+      color: #f9c80e;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    nav a:hover {
+      color: white;
+    }
+
+    main {
+      max-width: 800px;
+      margin: 3rem auto;
+      background: rgba(255,255,255,0.05);
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    }
+
+    h2 {
+      color: #f9c80e;
+      text-align: center;
+    }
+
+    p {
+      line-height: 1.6;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 1rem;
+    }
+
+    input, textarea {
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    button {
+      background: #1b9aaa;
+      border: none;
+      padding: 12px;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    button:hover {
+      background: #17a2b8;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      color: #aaa;
+    }
+
+  </style>
+</head>
+<body>
+  <nav>
+    <span><strong>Sistema de Rutas Arequipa</strong></span>
+    <ul>
+      <li><a href="index.html">Inicio</a></li>
+      <li><a href="map.html">Editor</a></li>
+      <li><a href="rutas.html">Rutas</a></li>
+      <li><a href="contacto.html">Contacto</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <h2>Contáctanos</h2>
+    <p>
+      Si tienes dudas, sugerencias o deseas colaborar con el proyecto, puedes escribirnos a través del siguiente formulario:
+    </p>
+
+    <form>
+      <input type="text" placeholder="Tu nombre completo" required>
+      <input type="email" placeholder="Tu correo electrónico" required>
+      <textarea rows="4" placeholder="Escribe tu mensaje aquí..." required></textarea>
+      <button>Enviar mensaje</button>
+    </form>
+
+    <footer>
+      © 2025 Sistema de Rutas Urbanas Arequipa — Desarrollado por el equipo Libroverse Tech
+    </footer>
+  </main>
+</body>
+</html>

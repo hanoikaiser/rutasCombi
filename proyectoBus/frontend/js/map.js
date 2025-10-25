@@ -1,116 +1,199 @@
-const map = L.map("map").setView([-16.409047, -71.537451], 13);
-
-// Tiles
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 19,
+const map = L.map('map').setView([-16.3989, -71.535], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19
 }).addTo(map);
 
-const layerGroup = L.layerGroup().addTo(map);
-const tempGroup = L.layerGroup().addTo(map);
+let rutas = [];
+let rutaActual = null;
+let polyline = null;
+let drawnItems = new L.FeatureGroup();
+let layerGroup = new L.FeatureGroup();
+let tempGroup = new L.FeatureGroup();
 
-let puntosRuta = [];
-let rutaEnEdicion = null;
+map.addLayer(drawnItems);
+map.addLayer(layerGroup);
+map.addLayer(tempGroup);
 
-// Cargar rutas desde backend
+const drawControl = new L.Control.Draw({
+  draw: {
+    polygon: false,
+    marker: false,
+    circle: false,
+    rectangle: false,
+    circlemarker: false,
+    polyline: true
+  },
+  edit: false
+});
+
+// Editar ruta
+document.getElementById('editarRutaBtn')?.addEventListener('click', () => {
+  if (!rutaActual) return alert('Selecciona una ruta primero.');
+  map.addControl(drawControl);
+  document.getElementById('guardarRutaBtn').disabled = false;
+  alert('Dibuja la nueva ruta sobre el mapa.');
+});
+
+map.on(L.Draw.Event.CREATED, (event) => {
+  drawnItems.clearLayers();
+  const layer = event.layer;
+  drawnItems.addLayer(layer);
+});
+
+// 🗺️ Cargar y mostrar rutas
 async function cargarRutas() {
-  layerGroup.clearLayers();
-  const response = await fetch("http://localhost:3000/api/rutas");
-  const rutas = await response.json();
+  const lista = document.getElementById("listaRutas");
+  if (lista) {
+    lista.innerHTML = "<li>Cargando rutas...</li>";
+  }
 
-  const colores = ["blue", "red", "green", "orange", "purple"];
-  const bounds = [];
+  try {
+    const res = await fetch("http://localhost:3000/api/rutas");
+    if (!res.ok) throw new Error("Error al cargar rutas");
+    rutas = await res.json();
 
-  rutas.forEach((ruta, i) => {
-    const coordsArray = typeof ruta.coordenadas === "string"
-      ? JSON.parse(ruta.coordenadas)
-      : ruta.coordenadas;
-    const coords = coordsArray.map(p => [p.lat, p.lng]);
-    const color = colores[i % colores.length];
+    layerGroup.clearLayers();
+    if (lista) lista.innerHTML = "";
 
-    const polyline = L.polyline(coords, { color, weight: 4 }).addTo(layerGroup);
+    const colores = ["blue", "red", "green", "orange", "purple"];
 
-    L.marker(coords[0]).addTo(layerGroup).bindPopup("Inicio: " + ruta.nombre);
-    L.marker(coords[coords.length - 1]).addTo(layerGroup).bindPopup("Fin: " + ruta.nombre);
+    rutas.forEach((ruta, i) => {
+      const coords = Array.isArray(ruta.coordenadas)
+        ? ruta.coordenadas
+        : JSON.parse(ruta.coordenadas || "[]");
 
-    bounds.push(...coords);
+      if (!coords.length) return;
 
-    // Click para editar
-    polyline.on("click", () => {
-      rutaEnEdicion = ruta.id;
-      puntosRuta = coords;
-      tempGroup.clearLayers();
+      const color = colores[i % colores.length];
+      const polyline = L.polyline(coords, { color, weight: 4 }).addTo(layerGroup);
 
-      coords.forEach((p, idx) => {
-        L.marker(p).addTo(tempGroup).bindPopup(`Punto ${idx + 1}`);
+      const iconoInicio = L.icon({
+        iconUrl: 'img/inicio.png',
+        iconSize: [32, 32],
       });
-      L.polyline(coords, { color: "gray", dashArray: "5,5" }).addTo(tempGroup);
 
-      document.getElementById("tituloForm").textContent = `Editando: ${ruta.nombre}`;
+      const iconoFin = L.icon({
+        iconUrl: 'img/fin.png',
+        iconSize: [32, 32],
+      });
+
+      L.marker(coords[0], { icon: iconoInicio })
+        .addTo(layerGroup)
+        .bindPopup(`Inicio: ${ruta.nombre}`);
+
+      L.marker(coords[coords.length - 1], { icon: iconoFin })
+        .addTo(layerGroup)
+        .bindPopup(`Fin: ${ruta.nombre}`);
+
+      polyline.on("click", () => {
+        rutaActual = ruta;
+        tempGroup.clearLayers();
+        coords.forEach((p, idx) => {
+          L.marker(p).addTo(tempGroup).bindPopup(`Punto ${idx + 1}`);
+        });
+        L.polyline(coords, { color: "gray", dashArray: "5,5" }).addTo(tempGroup);
+        alert(`Editando: ${ruta.nombre}`);
+      });
+
+      if (lista) {
+        const item = document.createElement("li");
+        item.textContent = ruta.nombre;
+        item.onclick = () => {
+          map.fitBounds(polyline.getBounds());
+          rutaActual = ruta;
+        };
+        lista.appendChild(item);
+      }
     });
-  });
 
-  if (bounds.length > 0) map.fitBounds(bounds);
+  } catch (error) {
+    console.error("Error al cargar rutas:", error);
+    if (lista) lista.innerHTML = "<li>Error al cargar rutas</li>";
+  }
 }
 
-cargarRutas();
-
-document.getElementById("recargarBtn").addEventListener("click", cargarRutas);
-
-map.on("click", (e) => {
-  const { lat, lng } = e.latlng;
-  puntosRuta.push([lat, lng]);
-  tempGroup.clearLayers();
-
-  puntosRuta.forEach((p, idx) => {
-    L.marker(p).addTo(tempGroup).bindPopup(`Punto ${idx + 1}`);
-  });
-  if (puntosRuta.length > 1) {
-    L.polyline(puntosRuta, { color: "gray", dashArray: "5,5" }).addTo(tempGroup);
-  }
-});
-
-document.getElementById("limpiarBtn").addEventListener("click", () => {
-  puntosRuta = [];
-  rutaEnEdicion = null;
-  tempGroup.clearLayers();
-  document.getElementById("tituloForm").textContent = "Agregar nueva ruta";
-});
-
-document.getElementById("formRuta").addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const nombre = document.getElementById("nombreRuta").value;
-
-  if (puntosRuta.length < 2) {
-    alert("Debes marcar al menos 2 puntos en el mapa.");
+// Mostrar ruta seleccionada
+document.getElementById('rutasSelect')?.addEventListener('change', (e) => {
+  const id = e.target.value;
+  if (polyline) map.removeLayer(polyline);
+  if (!id) {
+    rutaActual = null;
+    document.getElementById('guardarRutaBtn').disabled = true;
+    document.getElementById('eliminarRutaBtn').disabled = true;
     return;
   }
 
-  const coordenadas = puntosRuta.map(([lat, lng]) => ({ lat, lng }));
-  let res;
+  const ruta = rutas.find(r => r.id == id);
+  if (!ruta) return;
 
-  if (rutaEnEdicion) {
-    res = await fetch(`http://localhost:3000/api/rutas/${rutaEnEdicion}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nombre, coordenadas }),
+  const coords = Array.isArray(ruta.coordenadas) ? ruta.coordenadas : JSON.parse(ruta.coordenadas);
+  polyline = L.polyline(coords, { color: 'blue' }).addTo(map);
+  map.fitBounds(polyline.getBounds());
+  rutaActual = ruta;
+
+  document.getElementById('eliminarRutaBtn').disabled = false;
+});
+
+// Guardar ruta editada
+document.getElementById('guardarRutaBtn')?.addEventListener('click', async () => {
+  if (!rutaActual) return alert('Primero selecciona una ruta.');
+  if (drawnItems.getLayers().length === 0) return alert('Dibuja una nueva ruta primero.');
+
+  const nuevaRuta = drawnItems.getLayers()[0];
+  const latlngs = nuevaRuta.getLatLngs().map(ll => [ll.lat, ll.lng]);
+
+  try {
+    const res = await fetch(`http://localhost:3000/api/updateRuta/${rutaActual.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ coordenadas: latlngs })
     });
-  } else {
-    res = await fetch("http://localhost:3000/api/rutas", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nombre, coordenadas }),
-    });
-  }
 
-  const data = await res.json();
-  alert(data.mensaje);
-
-  if (res.ok) {
-    puntosRuta = [];
-    rutaEnEdicion = null;
-    tempGroup.clearLayers();
-    document.getElementById("tituloForm").textContent = "Agregar nueva ruta";
-    cargarRutas();
+    if (res.ok) {
+      alert('Ruta actualizada correctamente.');
+      drawnItems.clearLayers();
+      map.removeControl(drawControl);
+      document.getElementById('guardarRutaBtn').disabled = true;
+      cargarRutas();
+    } else {
+      alert('Error al actualizar la ruta.');
+    }
+  } catch (error) {
+    alert('Error de red al actualizar la ruta.');
   }
 });
+
+// Eliminar ruta
+document.getElementById('eliminarRutaBtn')?.addEventListener('click', async () => {
+  if (!rutaActual) return alert('Selecciona una ruta para eliminar.');
+
+  const confirmar = confirm(`¿Seguro que deseas eliminar la ruta "${rutaActual.nombre}"?`);
+  if (!confirmar) return;
+
+  try {
+    const res = await fetch(`http://localhost:3000/api/deleteRuta/${rutaActual.id}`, {
+      method: 'DELETE'
+    });
+
+    if (res.ok) {
+      alert('Ruta eliminada correctamente.');
+      if (polyline) map.removeLayer(polyline);
+      rutaActual = null;
+      document.getElementById('guardarRutaBtn').disabled = true;
+      document.getElementById('eliminarRutaBtn').disabled = true;
+      cargarRutas();
+    } else {
+      alert('Error al eliminar la ruta.');
+    }
+  } catch (error) {
+    alert('Error de red al eliminar la ruta.');
+  }
+});
+
+// Inicial
+//Ejecutar codigo para la localizacion en el mapa
+//Editar las rutas de los vehiculos
+//Agregar nuevas rutas por medio de un mapa interactivo en vez de coordenadas
+//Previsualizar las rutas en un mapa para confirmar sus paramteros
+//Planificar rutas respecto a los destinos mas concurridos
+//Fijar puntos intermedios para abordar distintos vehiculos

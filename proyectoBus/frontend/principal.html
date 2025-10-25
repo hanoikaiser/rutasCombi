@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Sistema de Rutas Inteligentes - Arequipa</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #001f3f, #004d7a, #008793);
+      background-size: 200% 200%;
+      animation: moverFondo 10s ease infinite;
+      color: white;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    @keyframes moverFondo {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    header {
+      font-size: 2.3rem;
+      font-weight: 700;
+      margin-top: 40px;
+      text-shadow: 0 3px 6px rgba(0,0,0,0.4);
+      letter-spacing: 1px;
+      text-align: center;
+    }
+
+    main {
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(12px);
+      padding: 40px 50px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 1000px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      text-align: center;
+      margin-top: 30px;
+      animation: aparecer 1s ease forwards;
+    }
+
+    @keyframes aparecer {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h2 {
+      color: #ffde59;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: #eaeaea;
+      margin: 10px 0;
+    }
+
+    .boton {
+      background-color: #ffde59;
+      color: #004d7a;
+      border: none;
+      padding: 14px 32px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 50px;
+      margin-top: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .boton:hover {
+      background-color: #ffd633;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+    }
+
+    .seccion-info {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 40px;
+      gap: 30px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 20px;
+      width: 250px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .icono {
+      font-size: 3rem;
+      margin-bottom: 10px;
+      animation: flotar 3s ease-in-out infinite;
+    }
+
+    @keyframes flotar {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .seccion-visual {
+      margin-top: 60px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-around;
+      text-align: left;
+      gap: 40px;
+    }
+
+    .texto-visual {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .texto-visual h3 {
+      color: #ffde59;
+      font-size: 1.6rem;
+      margin-bottom: 10px;
+    }
+
+    .texto-visual p {
+      color: #eaeaea;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .imagen-visual {
+      flex: 1;
+      min-width: 300px;
+      text-align: center;
+    }
+
+    .imagen-visual img {
+      width: 100%;
+      max-width: 420px;
+      border-radius: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+      transition: transform 0.4s ease;
+    }
+
+    .imagen-visual img:hover {
+      transform: scale(1.03);
+    }
+
+    footer {
+      margin-top: 60px;
+      padding: 20px;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.2);
+      width: 100%;
+      color: #dcdcdc;
+      font-size: 0.9rem;
+    }
+
+    footer span {
+      color: #ffde59;
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body>
+  <header>🚌 Sistema de Rutas Inteligentes - Arequipa</header>
+
+  <main>
+    <div class="icono">📍</div>
+    <h2>Bienvenido al Sistema</h2>
+    <p>
+      Este proyecto busca optimizar la movilidad urbana de Arequipa mediante el uso de tecnología de geolocalización y datos de transporte.
+    </p>
+    <p>
+      Aquí podrás visualizar, editar y analizar rutas de transporte público de forma interactiva, además de conocer las conexiones más eficientes entre diferentes puntos de la ciudad.
+    </p>
+
+    <button class="boton" onclick="irARutas()">Explorar rutas</button>
+
+    <section class="info">
+    <h2>¿Qué es este sistema?</h2>
+    <p>
+      Este sistema permite a los administradores y planificadores del transporte público visualizar, editar y gestionar rutas en un mapa interactivo.
+      Está diseñado para mejorar la experiencia de los ciudadanos, ofreciendo rutas más eficientes y actualizadas.
+    </p>
+
+    <h2>Funciones principales</h2>
+    <ul>
+      <li>📍 <strong>Visualización de rutas existentes</strong> con detalles de cada tramo.</li>
+      <li>🛠️ <strong>Editor interactivo</strong> para modificar trayectos directamente en el mapa.</li>
+      <li>💾 <strong>Gestión de base de datos</strong> que guarda y actualiza la información de cada ruta.</li>
+      <li>🚍 <strong>Búsqueda de rutas</strong> según origen y destino.</li>
+      <li>🌍 <strong>Visualización geográfica</strong> usando Leaflet y OpenRouteService API.</li>
+    </ul>
+
+    <p style="margin-top: 15px;">
+      Actualmente estás en la <strong>vista de inicio</strong>.  
+      Para acceder al módulo principal de edición de rutas, haz clic en el botón siguiente:
+    </p>
+  </section>
+
+    <!-- 🗺️ Nueva sección visual -->
+    <section class="seccion-visual">
+      <div class="texto-visual">
+        <h3>Una nueva forma de moverse por Arequipa</h3>
+        <p>
+          Nuestro mapa interactivo te permitirá comprender cómo se conectan las líneas de transporte en tiempo real.
+          Con información actualizada sobre las principales rutas y sus paraderos, tendrás una herramienta poderosa para planificar tus desplazamientos o gestionar las líneas del transporte urbano.
+        </p>
+      </div>
+
+      <div class="imagen-visual">
+        <img src="img/mapa-arequipa.jpg" alt="Mapa de rutas de Arequipa">
+      </div>
+    </section>
+  </main>
+
+  <div class="estadisticas">
+      <div class="card">
+        <h3>🚍 24 Rutas activas</h3>
+        <p>Actualmente operativas y visibles en el mapa.</p>
+      </div>
+      <div class="card">
+        <h3>📍 158 Paraderos</h3>
+        <p>Identificados y geolocalizados dentro del sistema.</p>
+      </div>
+      <div class="card">
+        <h3>👥 5 Administradores</h3>
+        <p>Con permisos de edición y supervisión de rutas.</p>
+      </div>
+    </div>
+
+  <footer>
+    Proyecto académico desarrollado por <span>Libroverse Devs</span> | © 2025 Todos los derechos reservados
+  </footer>
+
+  <script>
+    function irARutas() {
+      window.location.href = "rutas.html";
+    }
+  </script>
+</body>
+</html>
