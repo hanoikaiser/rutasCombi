@@ -190,6 +190,20 @@ document.getElementById('eliminarRutaBtn')?.addEventListener('click', async () =
   }
 });
 
+function mostrarRutaEnMapa(ruta) {
+  limpiarRuta();
+  rutaActual = ruta.puntos;
+  const color = ruta.color || '#4CAF50';
+
+  polyline = L.polyline(ruta.puntos, { color, weight: 4 }).addTo(map);
+  map.fitBounds(polyline.getBounds());
+
+  // Tooltip con información
+  polyline.bindPopup(`
+    <b>${ruta.nombre}</b><br>
+    ${ruta.descripcion || 'Sin descripción.'}
+  `).openPopup();
+}
 // Inicial
 //Ejecutar codigo para la localizacion en el mapa
 //Editar las rutas de los vehiculos
