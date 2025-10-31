@@ -1,213 +1,189 @@
-const map = L.map('map').setView([-16.3989, -71.535], 13);
+// =======================
+// CONFIGURACIÓN DEL MAPA
+// =======================
+const map = L.map('map').setView([-16.3989, -71.535], 13); // Centro de Arequipa
+
+// Capa base
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19
+  maxZoom: 19,
+  attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-let rutas = [];
-let rutaActual = null;
-let polyline = null;
-let drawnItems = new L.FeatureGroup();
-let layerGroup = new L.FeatureGroup();
-let tempGroup = new L.FeatureGroup();
+// =======================
+// VARIABLES GLOBALES
+// =======================
+let rutas = []; // Lista de rutas disponibles
+let capaRutaActual = null; // Capa actualmente mostrada
+let controlEdicion = null; // Control de dibujo Leaflet
+let rutaSeleccionada = null; // Ruta activa
 
-map.addLayer(drawnItems);
-map.addLayer(layerGroup);
-map.addLayer(tempGroup);
+// =======================
+// FUNCIONES AUXILIARES
+// =======================
 
-const drawControl = new L.Control.Draw({
-  draw: {
-    polygon: false,
-    marker: false,
-    circle: false,
-    rectangle: false,
-    circlemarker: false,
-    polyline: true
-  },
-  edit: false
-});
-
-// Editar ruta
-document.getElementById('editarRutaBtn')?.addEventListener('click', () => {
-  if (!rutaActual) return alert('Selecciona una ruta primero.');
-  map.addControl(drawControl);
-  document.getElementById('guardarRutaBtn').disabled = false;
-  alert('Dibuja la nueva ruta sobre el mapa.');
-});
-
-map.on(L.Draw.Event.CREATED, (event) => {
-  drawnItems.clearLayers();
-  const layer = event.layer;
-  drawnItems.addLayer(layer);
-});
-
-// 🗺️ Cargar y mostrar rutas
+// Simula la carga de rutas desde la base de datos o API
 async function cargarRutas() {
-  const lista = document.getElementById("listaRutas");
-  if (lista) {
-    lista.innerHTML = "<li>Cargando rutas...</li>";
-  }
-
   try {
-    const res = await fetch("http://localhost:3000/api/rutas");
-    if (!res.ok) throw new Error("Error al cargar rutas");
-    rutas = await res.json();
+    // ⚠️ En producción, cambia esta línea por tu endpoint real:
+    // Ejemplo: const res = await fetch("/api/rutas");
+    // const data = await res.json();
 
-    layerGroup.clearLayers();
-    if (lista) lista.innerHTML = "";
-
-    const colores = ["blue", "red", "green", "orange", "purple"];
-
-    rutas.forEach((ruta, i) => {
-      const coords = Array.isArray(ruta.coordenadas)
-        ? ruta.coordenadas
-        : JSON.parse(ruta.coordenadas || "[]");
-
-      if (!coords.length) return;
-
-      const color = colores[i % colores.length];
-      const polyline = L.polyline(coords, { color, weight: 4 }).addTo(layerGroup);
-
-      const iconoInicio = L.icon({
-        iconUrl: 'img/inicio.png',
-        iconSize: [32, 32],
-      });
-
-      const iconoFin = L.icon({
-        iconUrl: 'img/fin.png',
-        iconSize: [32, 32],
-      });
-
-      L.marker(coords[0], { icon: iconoInicio })
-        .addTo(layerGroup)
-        .bindPopup(`Inicio: ${ruta.nombre}`);
-
-      L.marker(coords[coords.length - 1], { icon: iconoFin })
-        .addTo(layerGroup)
-        .bindPopup(`Fin: ${ruta.nombre}`);
-
-      polyline.on("click", () => {
-        rutaActual = ruta;
-        tempGroup.clearLayers();
-        coords.forEach((p, idx) => {
-          L.marker(p).addTo(tempGroup).bindPopup(`Punto ${idx + 1}`);
-        });
-        L.polyline(coords, { color: "gray", dashArray: "5,5" }).addTo(tempGroup);
-        alert(`Editando: ${ruta.nombre}`);
-      });
-
-      if (lista) {
-        const item = document.createElement("li");
-        item.textContent = ruta.nombre;
-        item.onclick = () => {
-          map.fitBounds(polyline.getBounds());
-          rutaActual = ruta;
-        };
-        lista.appendChild(item);
+    const data = [
+      {
+        id: 1,
+        nombre: "Ruta 1 - Paucarpata - Cercado",
+        color: "#007bff",
+        coordenadas: [
+          [-16.406, -71.535],
+          [-16.402, -71.530],
+          [-16.398, -71.528],
+          [-16.395, -71.531]
+        ]
+      },
+      {
+        id: 2,
+        nombre: "Ruta 2 - Cerro Colorado - Yanahuara",
+        color: "#dc3545",
+        coordenadas: [
+          [-16.361, -71.565],
+          [-16.365, -71.550],
+          [-16.370, -71.540],
+          [-16.380, -71.532]
+        ]
       }
-    });
+    ];
 
+    rutas = data;
+    actualizarListaRutas();
+    actualizarSelectRutas();
+    console.log("✅ Rutas cargadas correctamente");
   } catch (error) {
-    console.error("Error al cargar rutas:", error);
-    if (lista) lista.innerHTML = "<li>Error al cargar rutas</li>";
+    console.error("❌ Error al cargar rutas:", error);
   }
 }
 
-// Mostrar ruta seleccionada
-document.getElementById('rutasSelect')?.addEventListener('change', (e) => {
-  const id = e.target.value;
-  if (polyline) map.removeLayer(polyline);
-  if (!id) {
-    rutaActual = null;
-    document.getElementById('guardarRutaBtn').disabled = true;
-    document.getElementById('eliminarRutaBtn').disabled = true;
-    return;
-  }
+// Llena el panel lateral
+function actualizarListaRutas() {
+  const lista = document.getElementById("listaRutas");
+  lista.innerHTML = "";
+  rutas.forEach(ruta => {
+    const li = document.createElement("li");
+    li.textContent = ruta.nombre;
+    li.onclick = () => seleccionarRuta(ruta.id);
+    lista.appendChild(li);
+  });
+}
 
+// Llena el combo select
+function actualizarSelectRutas() {
+  const select = document.getElementById("rutasSelect");
+  select.innerHTML = '<option value="">Seleccione una ruta</option>';
+  rutas.forEach(ruta => {
+    const opt = document.createElement("option");
+    opt.value = ruta.id;
+    opt.textContent = ruta.nombre;
+    select.appendChild(opt);
+  });
+}
+
+// Muestra la ruta en el mapa
+function mostrarRuta(ruta) {
+  if (capaRutaActual) map.removeLayer(capaRutaActual);
+
+  capaRutaActual = L.polyline(ruta.coordenadas, {
+    color: ruta.color || "#007bff",
+    weight: 5
+  }).addTo(map);
+
+  map.fitBounds(capaRutaActual.getBounds());
+}
+
+// Seleccionar una ruta desde lista o combo
+function seleccionarRuta(id) {
   const ruta = rutas.find(r => r.id == id);
   if (!ruta) return;
 
-  const coords = Array.isArray(ruta.coordenadas) ? ruta.coordenadas : JSON.parse(ruta.coordenadas);
-  polyline = L.polyline(coords, { color: 'blue' }).addTo(map);
-  map.fitBounds(polyline.getBounds());
-  rutaActual = ruta;
+  rutaSeleccionada = ruta;
+  mostrarRuta(ruta);
 
-  document.getElementById('eliminarRutaBtn').disabled = false;
-});
+  document.getElementById("rutasSelect").value = ruta.id;
+  document.getElementById("editarRutaBtn").disabled = false;
+  document.getElementById("eliminarRutaBtn").disabled = false;
+  document.getElementById("guardarRutaBtn").disabled = true;
+}
 
-// Guardar ruta editada
-document.getElementById('guardarRutaBtn')?.addEventListener('click', async () => {
-  if (!rutaActual) return alert('Primero selecciona una ruta.');
-  if (drawnItems.getLayers().length === 0) return alert('Dibuja una nueva ruta primero.');
+// Activar modo edición
+function editarRuta() {
+  if (!rutaSeleccionada) return;
 
-  const nuevaRuta = drawnItems.getLayers()[0];
-  const latlngs = nuevaRuta.getLatLngs().map(ll => [ll.lat, ll.lng]);
+  if (controlEdicion) map.removeControl(controlEdicion);
 
-  try {
-    const res = await fetch(`http://localhost:3000/api/updateRuta/${rutaActual.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ coordenadas: latlngs })
-    });
+  controlEdicion = new L.Control.Draw({
+    edit: {
+      featureGroup: L.featureGroup([capaRutaActual]),
+      remove: false
+    },
+    draw: false
+  });
 
-    if (res.ok) {
-      alert('Ruta actualizada correctamente.');
-      drawnItems.clearLayers();
-      map.removeControl(drawControl);
-      document.getElementById('guardarRutaBtn').disabled = true;
-      cargarRutas();
-    } else {
-      alert('Error al actualizar la ruta.');
-    }
-  } catch (error) {
-    alert('Error de red al actualizar la ruta.');
+  map.addControl(controlEdicion);
+  document.getElementById("guardarRutaBtn").disabled = false;
+  console.log("✏️ Modo edición activado");
+}
+
+// Guardar cambios
+function guardarRuta() {
+  if (!rutaSeleccionada || !capaRutaActual) return;
+
+  const coords = capaRutaActual.getLatLngs().map(p => [p.lat, p.lng]);
+  rutaSeleccionada.coordenadas = coords;
+
+  // Aquí puedes hacer un PUT o POST al backend
+  console.log("💾 Ruta actualizada:", rutaSeleccionada);
+
+  document.getElementById("guardarRutaBtn").disabled = true;
+  if (controlEdicion) {
+    map.removeControl(controlEdicion);
+    controlEdicion = null;
   }
-});
+  alert("✅ Cambios guardados correctamente");
+}
 
 // Eliminar ruta
-document.getElementById('eliminarRutaBtn')?.addEventListener('click', async () => {
-  if (!rutaActual) return alert('Selecciona una ruta para eliminar.');
+function eliminarRuta() {
+  if (!rutaSeleccionada) return;
 
-  const confirmar = confirm(`¿Seguro que deseas eliminar la ruta "${rutaActual.nombre}"?`);
-  if (!confirmar) return;
+  if (!confirm(`¿Seguro que deseas eliminar "${rutaSeleccionada.nombre}"?`)) return;
 
-  try {
-    const res = await fetch(`http://localhost:3000/api/deleteRuta/${rutaActual.id}`, {
-      method: 'DELETE'
-    });
+  rutas = rutas.filter(r => r.id !== rutaSeleccionada.id);
+  if (capaRutaActual) map.removeLayer(capaRutaActual);
 
-    if (res.ok) {
-      alert('Ruta eliminada correctamente.');
-      if (polyline) map.removeLayer(polyline);
-      rutaActual = null;
-      document.getElementById('guardarRutaBtn').disabled = true;
-      document.getElementById('eliminarRutaBtn').disabled = true;
-      cargarRutas();
-    } else {
-      alert('Error al eliminar la ruta.');
-    }
-  } catch (error) {
-    alert('Error de red al eliminar la ruta.');
-  }
+  actualizarListaRutas();
+  actualizarSelectRutas();
+
+  document.getElementById("editarRutaBtn").disabled = true;
+  document.getElementById("eliminarRutaBtn").disabled = true;
+  document.getElementById("guardarRutaBtn").disabled = true;
+
+  console.log("🗑️ Ruta eliminada:", rutaSeleccionada.nombre);
+  alert("✅ Ruta eliminada correctamente");
+  rutaSeleccionada = null;
+}
+
+// =======================
+// EVENTOS
+// =======================
+document.getElementById("rutasSelect").addEventListener("change", e => {
+  const id = e.target.value;
+  if (id) seleccionarRuta(id);
 });
 
-function mostrarRutaEnMapa(ruta) {
-  limpiarRuta();
-  rutaActual = ruta.puntos;
-  const color = ruta.color || '#4CAF50';
+document.getElementById("editarRutaBtn").addEventListener("click", editarRuta);
+document.getElementById("guardarRutaBtn").addEventListener("click", guardarRuta);
+document.getElementById("eliminarRutaBtn").addEventListener("click", eliminarRuta);
+document.getElementById("recargarBtn").addEventListener("click", cargarRutas);
 
-  polyline = L.polyline(ruta.puntos, { color, weight: 4 }).addTo(map);
-  map.fitBounds(polyline.getBounds());
-
-  // Tooltip con información
-  polyline.bindPopup(`
-    <b>${ruta.nombre}</b><br>
-    ${ruta.descripcion || 'Sin descripción.'}
-  `).openPopup();
-}
-// Inicial
-//Ejecutar codigo para la localizacion en el mapa
-//Editar las rutas de los vehiculos
-//Agregar nuevas rutas por medio de un mapa interactivo en vez de coordenadas
-//Previsualizar las rutas en un mapa para confirmar sus paramteros
-//Planificar rutas respecto a los destinos mas concurridos
-//Fijar puntos intermedios para abordar distintos vehiculos
+// =======================
+// INICIALIZACIÓN
+// =======================
+cargarRutas();
