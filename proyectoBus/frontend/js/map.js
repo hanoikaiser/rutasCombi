@@ -3,7 +3,6 @@
 // =======================
 const map = L.map('map').setView([-16.3989, -71.535], 13); // Centro de Arequipa
 
-// Capa base
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; OpenStreetMap contributors'
@@ -12,22 +11,17 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 // =======================
 // VARIABLES GLOBALES
 // =======================
-let rutas = []; // Lista de rutas disponibles
-let capaRutaActual = null; // Capa actualmente mostrada
-let controlEdicion = null; // Control de dibujo Leaflet
-let rutaSeleccionada = null; // Ruta activa
+let rutas = [];
+let capaRutaActual = null;
+let controlEdicion = null;
+let rutaSeleccionada = null;
+let capaNuevaRuta = null;
 
 // =======================
 // FUNCIONES AUXILIARES
 // =======================
-
-// Simula la carga de rutas desde la base de datos o API
 async function cargarRutas() {
   try {
-    // ⚠️ En producción, cambia esta línea por tu endpoint real:
-    // Ejemplo: const res = await fetch("/api/rutas");
-    // const data = await res.json();
-
     const data = [
       {
         id: 1,
@@ -62,7 +56,6 @@ async function cargarRutas() {
   }
 }
 
-// Llena el panel lateral
 function actualizarListaRutas() {
   const lista = document.getElementById("listaRutas");
   lista.innerHTML = "";
@@ -74,7 +67,6 @@ function actualizarListaRutas() {
   });
 }
 
-// Llena el combo select
 function actualizarSelectRutas() {
   const select = document.getElementById("rutasSelect");
   select.innerHTML = '<option value="">Seleccione una ruta</option>';
@@ -86,7 +78,6 @@ function actualizarSelectRutas() {
   });
 }
 
-// Muestra la ruta en el mapa
 function mostrarRuta(ruta) {
   if (capaRutaActual) map.removeLayer(capaRutaActual);
 
@@ -98,7 +89,6 @@ function mostrarRuta(ruta) {
   map.fitBounds(capaRutaActual.getBounds());
 }
 
-// Seleccionar una ruta desde lista o combo
 function seleccionarRuta(id) {
   const ruta = rutas.find(r => r.id == id);
   if (!ruta) return;
@@ -112,7 +102,6 @@ function seleccionarRuta(id) {
   document.getElementById("guardarRutaBtn").disabled = true;
 }
 
-// Activar modo edición
 function editarRuta() {
   if (!rutaSeleccionada) return;
 
@@ -131,14 +120,12 @@ function editarRuta() {
   console.log("✏️ Modo edición activado");
 }
 
-// Guardar cambios
 function guardarRuta() {
   if (!rutaSeleccionada || !capaRutaActual) return;
 
   const coords = capaRutaActual.getLatLngs().map(p => [p.lat, p.lng]);
   rutaSeleccionada.coordenadas = coords;
 
-  // Aquí puedes hacer un PUT o POST al backend
   console.log("💾 Ruta actualizada:", rutaSeleccionada);
 
   document.getElementById("guardarRutaBtn").disabled = true;
@@ -149,7 +136,6 @@ function guardarRuta() {
   alert("✅ Cambios guardados correctamente");
 }
 
-// Eliminar ruta
 function eliminarRuta() {
   if (!rutaSeleccionada) return;
 
@@ -171,6 +157,56 @@ function eliminarRuta() {
 }
 
 // =======================
+// CREAR NUEVA RUTA
+// =======================
+function crearNuevaRuta() {
+  if (controlEdicion) map.removeControl(controlEdicion);
+
+  const drawControl = new L.Control.Draw({
+    draw: {
+      polyline: true,
+      polygon: false,
+      circle: false,
+      rectangle: false,
+      marker: false,
+      circlemarker: false
+    },
+    edit: false
+  });
+
+  map.addControl(drawControl);
+
+  alert("🟢 Dibuja una nueva ruta sobre el mapa. Haz clic en cada punto y luego en 'Finalizar dibujo'.");
+
+  map.once(L.Draw.Event.CREATED, (event) => {
+    capaNuevaRuta = event.layer;
+    map.addLayer(capaNuevaRuta);
+
+    const nombre = prompt("📝 Nombre de la nueva ruta:");
+    const color = prompt("🎨 Color en formato HEX (ejemplo: #ff8800):", "#28a745");
+
+    if (!nombre) {
+      alert("❌ No se asignó nombre. Ruta descartada.");
+      map.removeLayer(capaNuevaRuta);
+      return;
+    }
+
+    const nuevaRuta = {
+      id: rutas.length + 1,
+      nombre,
+      color,
+      coordenadas: capaNuevaRuta.getLatLngs().map(p => [p.lat, p.lng])
+    };
+
+    rutas.push(nuevaRuta);
+    actualizarListaRutas();
+    actualizarSelectRutas();
+    alert("✅ Nueva ruta creada correctamente.");
+    map.removeControl(drawControl);
+  });
+}
+
+// =======================
 // EVENTOS
 // =======================
 document.getElementById("rutasSelect").addEventListener("change", e => {
@@ -181,6 +217,7 @@ document.getElementById("rutasSelect").addEventListener("change", e => {
 document.getElementById("editarRutaBtn").addEventListener("click", editarRuta);
 document.getElementById("guardarRutaBtn").addEventListener("click", guardarRuta);
 document.getElementById("eliminarRutaBtn").addEventListener("click", eliminarRuta);
+document.getElementById("nuevaRutaBtn").addEventListener("click", crearNuevaRuta);
 document.getElementById("recargarBtn").addEventListener("click", cargarRutas);
 
 // =======================
