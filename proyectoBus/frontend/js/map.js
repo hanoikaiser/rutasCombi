@@ -206,6 +206,22 @@ function crearNuevaRuta() {
   });
 }
 
+document.getElementById('limpiarBtn')?.addEventListener('click', () => {
+  drawnItems.clearLayers();
+});
+
+// Botón para recargar rutas
+document.getElementById('recargarBtn')?.addEventListener('click', cargarRutas);
+
+// Habilitar dibujo al hacer clic en el mapa
+map.addControl(drawControl);
+
+map.on(L.Draw.Event.CREATED, (event) => {
+  drawnItems.clearLayers();
+  const layer = event.layer;
+  drawnItems.addLayer(layer);
+});
+
 // =======================
 // EVENTOS
 // =======================
