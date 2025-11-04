@@ -236,6 +236,11 @@ document.getElementById("eliminarRutaBtn").addEventListener("click", eliminarRut
 document.getElementById("nuevaRutaBtn").addEventListener("click", crearNuevaRuta);
 document.getElementById("recargarBtn").addEventListener("click", cargarRutas);
 
+
+document.getElementById('loadRoutesBtn').addEventListener('click', loadRoutes);
+    document.getElementById('addRouteBtn').addEventListener('click', addNewRoute);
+    document.getElementById('locateMeBtn').addEventListener('click', locateUser);
+    
 // =======================
 // INICIALIZACIÓN
 // =======================
