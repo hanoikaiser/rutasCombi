@@ -7,112 +7,113 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
   <style>
     :root {
-      --verde: #4CAF50;
-      --verde-oscuro: #388E3C;
-      --rojo: #e74c3c;
-      --gris-claro: #f4f4f9;
-      --sombra: rgba(0, 0, 0, 0.1);
-    }
+  --verde: #4CAF50;
+  --verde-oscuro: #388E3C;
+  --rojo: #e74c3c;
+  --gris-claro: #f4f4f9;
+  --sombra: rgba(0, 0, 0, 0.1);
+}
 
-    body {
-      margin: 0;
-      font-family: "Segoe UI", Arial, sans-serif;
-      background: var(--gris-claro);
-    }
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: var(--gris-claro);
+}
 
-    header {
-      background: var(--verde);
-      color: #fff;
-      padding: 1rem;
-      text-align: center;
-      box-shadow: 0 2px 5px var(--sombra);
-    }
+header {
+  background: var(--verde);
+  color: #fff;
+  padding: 1rem;
+  text-align: center;
+  box-shadow: 0 2px 5px var(--sombra);
+}
 
-    main {
-      display: grid;
-      grid-template-columns: 1fr 350px;
-      gap: 1rem;
-      padding: 1rem;
-    }
+main {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 1rem;
+  padding: 1rem;
+}
 
-    #map {
-      height: 85vh;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px var(--sombra);
-    }
+#map {
+  height: 85vh;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px var(--sombra);
+}
 
-    aside {
-      background: #fff;
-      padding: 1rem;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px var(--sombra);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
+aside {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px var(--sombra);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
 
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
 
-    label {
-      font-weight: bold;
-      margin-top: 0.5rem;
-    }
+label {
+  font-weight: bold;
+  margin-top: 0.5rem;
+}
 
-    input, select, textarea {
-      padding: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 0.95rem;
-    }
+input, select, textarea {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 0.95rem;
+}
 
-    button {
-      padding: 0.7rem;
-      border: none;
-      border-radius: 5px;
-      font-weight: bold;
-      color: #fff;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
+button {
+  padding: 0.7rem;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
 
-    button[type="submit"] {
-      background: var(--verde);
-    }
+button[type="submit"] {
+  background: var(--verde);
+}
 
-    button[type="submit"]:hover {
-      background: var(--verde-oscuro);
-    }
+button[type="submit"]:hover {
+  background: var(--verde-oscuro);
+}
 
-    #limpiarBtn {
-      background: var(--rojo);
-    }
+#limpiarBtn {
+  background: var(--rojo);
+}
 
-    #recargarBtn {
-      background: #3498db;
-      margin-top: 0.5rem;
-    }
+#recargarBtn {
+  background: #3498db;
+  margin-top: 0.5rem;
+}
 
-    #listaRutas {
-      margin-top: 1rem;
-      border-top: 1px solid #ccc;
-      padding-top: 0.5rem;
-      max-height: 200px;
-      overflow-y: auto;
-      font-size: 0.9rem;
-    }
+#listaRutas {
+  margin-top: 1rem;
+  border-top: 1px solid #ccc;
+  padding-top: 0.5rem;
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+}
 
-    footer {
-      background: #fff;
-      text-align: center;
-      padding: 0.8rem;
-      font-size: 0.9rem;
-      color: #555;
-      border-top: 1px solid #ddd;
-    }
+footer {
+  background: #fff;
+  text-align: center;
+  padding: 0.8rem;
+  font-size: 0.9rem;
+  color: #555;
+  border-top: 1px solid #ddd;
+}
+
   </style>
 </head>
 <body>
