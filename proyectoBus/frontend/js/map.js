@@ -230,6 +230,35 @@ document.getElementById("rutasSelect").addEventListener("change", e => {
   if (id) seleccionarRuta(id);
 });
 
+
+// Evento: guardar ruta
+document.getElementById('formRuta').addEventListener('submit', function (e) {
+  e.preventDefault();
+  const nombre = document.getElementById('nombreRuta').value.trim();
+
+  if (!nombre || puntos.length < 2) {
+    alert('Debes ingresar un nombre y al menos 2 puntos para guardar la ruta.');
+    return;
+  }
+
+  const nuevaRuta = {
+    nombre: nombre,
+    coordenadas: puntos
+  };
+
+  // Simulamos guardado en localStorage
+  let rutasGuardadas = JSON.parse(localStorage.getItem('rutas')) || [];
+  rutasGuardadas.push(nuevaRuta);
+  localStorage.setItem('rutas', JSON.stringify(rutasGuardadas));
+
+  alert('✅ Ruta guardada correctamente.');
+  document.getElementById('formRuta').reset();
+  puntos = [];
+  if (rutaActual) map.removeLayer(rutaActual);
+  rutaActual = null;
+});
+
+
 document.getElementById("editarRutaBtn").addEventListener("click", editarRuta);
 document.getElementById("guardarRutaBtn").addEventListener("click", guardarRuta);
 document.getElementById("eliminarRutaBtn").addEventListener("click", eliminarRuta);
