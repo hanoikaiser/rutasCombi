@@ -258,6 +258,28 @@ document.getElementById('formRuta').addEventListener('submit', function (e) {
   rutaActual = null;
 });
 
+document.getElementById('recargarBtn').addEventListener('click', function () {
+  const rutasGuardadas = JSON.parse(localStorage.getItem('rutas')) || [];
+
+  // Limpiamos el mapa antes de dibujar
+  map.eachLayer(layer => {
+    if (layer instanceof L.Marker || layer instanceof L.Polyline) {
+      map.removeLayer(layer);
+    }
+  });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  rutasGuardadas.forEach(ruta => {
+    L.polyline(ruta.coordenadas, { color: 'green' }).addTo(map)
+      .bindPopup(`<b>${ruta.nombre}</b>`);
+  });
+
+  alert('🔄 Rutas recargadas correctamente.');
+});
+
 
 document.getElementById("editarRutaBtn").addEventListener("click", editarRuta);
 document.getElementById("guardarRutaBtn").addEventListener("click", guardarRuta);
