@@ -93,3 +93,33 @@ document.getElementById('recargarBtn').addEventListener('click', function () {
 
   alert('🔄 Rutas recargadas correctamente.');
 });
+
+
+// document.getElementById("formRuta").addEventListener("submit", (e) => {
+//   e.preventDefault();
+
+//   const nombre = document.getElementById("nombreRuta").value;
+//   const color = document.getElementById("colorRuta").value;
+//   const descripcion = document.getElementById("descripcionRuta").value;
+
+//   if (!nombre.trim()) {
+//     alert("❌ Debes ingresar un nombre para la ruta");
+//     return;
+//   }
+
+//   const nuevaRuta = {
+//     id: rutas.length + 1,
+//     nombre,
+//     color,
+//     descripcion,
+//     coordenadas: [
+//       [-16.40 + Math.random() * 0.02, -71.54 + Math.random() * 0.02],
+//       [-16.39 + Math.random() * 0.02, -71.53 + Math.random() * 0.02]
+//     ]
+//   };
+
+//   rutas.push(nuevaRuta);
+//   mostrarRutas();
+//   alert("✅ Ruta agregada correctamente");
+//   e.target.reset();
+// });
