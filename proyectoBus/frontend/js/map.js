@@ -123,3 +123,9 @@ document.getElementById('recargarBtn').addEventListener('click', function () {
 //   alert("✅ Ruta agregada correctamente");
 //   e.target.reset();
 // });
+
+// document.getElementById("recargarBtn").addEventListener("click", cargarRutas);
+
+// document.getElementById("limpiarBtn").addEventListener("click", () => {
+//   if (capaRutaActual) map.removeLayer(capaRutaActual);
+// });
