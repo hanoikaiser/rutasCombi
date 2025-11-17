@@ -1,131 +1,113 @@
-// Inicialización del mapa centrado en Arequipa
+// ===============================
+// CONFIGURACIÓN DEL MAPA
+// ===============================
 const map = L.map('map').setView([-16.3989, -71.535], 13);
 
-// Capa base de OpenStreetMap
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+// Capa base
+const baseLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '© OpenStreetMap contributors'
-}).addTo(map);
+});
+baseLayer.addTo(map);
 
-// Variables para controlar los puntos y rutas
+// Variables para control de rutas
 let puntos = [];
-let rutaActual = null;
+let lineaTemporal = null;
 
-// Evento: clic en el mapa → agregar punto
-map.on('click', function (e) {
+// ===============================
+// EVENTO: CLIC EN EL MAPA
+// ===============================
+map.on('click', (e) => {
   const { lat, lng } = e.latlng;
+
   puntos.push([lat, lng]);
 
-  // Marcador en el mapa
+  // Marcador
   L.marker([lat, lng]).addTo(map);
 
-  // Dibujar línea
-  if (rutaActual) {
-    map.removeLayer(rutaActual);
-  }
-  rutaActual = L.polyline(puntos, { color: 'blue' }).addTo(map);
+  // Línea temporal
+  if (lineaTemporal) map.removeLayer(lineaTemporal);
+
+  lineaTemporal = L.polyline(puntos, { color: 'blue' }).addTo(map);
 });
 
-// Evento: guardar ruta
-document.getElementById('formRuta').addEventListener('submit', function (e) {
+// ===============================
+// GUARDAR RUTA (localStorage por ahora)
+// ===============================
+document.getElementById('formRuta').addEventListener('submit', (e) => {
   e.preventDefault();
+
   const nombre = document.getElementById('nombreRuta').value.trim();
 
-  if (!nombre || puntos.length < 2) {
-    alert('Debes ingresar un nombre y al menos 2 puntos para guardar la ruta.');
+  if (!nombre) {
+    alert("❗ Debes ingresar un nombre para la ruta.");
     return;
   }
 
-  const nuevaRuta = {
-    nombre: nombre,
+  if (puntos.length < 2) {
+    alert("❗ La ruta necesita al menos 2 puntos.");
+    return;
+  }
+
+  const ruta = {
+    id: Date.now(),
+    nombre,
     coordenadas: puntos
   };
 
-  // Simulamos guardado en localStorage
-  let rutasGuardadas = JSON.parse(localStorage.getItem('rutas')) || [];
-  rutasGuardadas.push(nuevaRuta);
-  localStorage.setItem('rutas', JSON.stringify(rutasGuardadas));
+  let lista = JSON.parse(localStorage.getItem('rutas')) || [];
+  lista.push(ruta);
+  localStorage.setItem('rutas', JSON.stringify(lista));
 
-  alert('✅ Ruta guardada correctamente.');
-  document.getElementById('formRuta').reset();
+  alert("✅ Ruta almacenada correctamente.");
+
+  // Reset
   puntos = [];
-  if (rutaActual) map.removeLayer(rutaActual);
-  rutaActual = null;
+  if (lineaTemporal) map.removeLayer(lineaTemporal);
+  lineaTemporal = null;
+  e.target.reset();
 });
 
-// Evento: limpiar mapa
-document.getElementById('limpiarBtn').addEventListener('click', function () {
+// ===============================
+// LIMPIAR EL MAPA
+// ===============================
+document.getElementById('limpiarBtn').addEventListener('click', () => {
+  limpiarMapa();
+});
+
+function limpiarMapa() {
   puntos = [];
-  if (rutaActual) {
-    map.removeLayer(rutaActual);
-    rutaActual = null;
+
+  if (lineaTemporal) map.removeLayer(lineaTemporal);
+  lineaTemporal = null;
+
+  map.eachLayer(layer => {
+    if (layer instanceof L.Marker || layer instanceof L.Polyline) {
+      map.removeLayer(layer);
+    }
+  });
+
+  // Reagregamos capa base
+  baseLayer.addTo(map);
+}
+
+// ===============================
+// RECARGAR RUTAS GUARDADAS
+// ===============================
+document.getElementById('recargarBtn').addEventListener('click', () => {
+  limpiarMapa();
+
+  const rutas = JSON.parse(localStorage.getItem('rutas')) || [];
+
+  rutas.forEach(r => {
+    L.polyline(r.coordenadas, { color: 'green' })
+      .addTo(map)
+      .bindPopup(`<b>${r.nombre}</b>`);
+  });
+
+  if (rutas.length === 0) {
+    alert("⚠️ No hay rutas guardadas.");
+  } else {
+    alert("🔄 Rutas cargadas.");
   }
-  map.eachLayer(layer => {
-    if (layer instanceof L.Marker || layer instanceof L.Polyline) {
-      map.removeLayer(layer);
-    }
-  });
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(map);
 });
-
-// Evento: recargar rutas guardadas
-document.getElementById('recargarBtn').addEventListener('click', function () {
-  const rutasGuardadas = JSON.parse(localStorage.getItem('rutas')) || [];
-
-  // Limpiamos el mapa antes de dibujar
-  map.eachLayer(layer => {
-    if (layer instanceof L.Marker || layer instanceof L.Polyline) {
-      map.removeLayer(layer);
-    }
-  });
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(map);
-
-  rutasGuardadas.forEach(ruta => {
-    L.polyline(ruta.coordenadas, { color: 'green' }).addTo(map)
-      .bindPopup(`<b>${ruta.nombre}</b>`);
-  });
-
-  alert('🔄 Rutas recargadas correctamente.');
-});
-
-
-// document.getElementById("formRuta").addEventListener("submit", (e) => {
-//   e.preventDefault();
-
-//   const nombre = document.getElementById("nombreRuta").value;
-//   const color = document.getElementById("colorRuta").value;
-//   const descripcion = document.getElementById("descripcionRuta").value;
-
-//   if (!nombre.trim()) {
-//     alert("❌ Debes ingresar un nombre para la ruta");
-//     return;
-//   }
-
-//   const nuevaRuta = {
-//     id: rutas.length + 1,
-//     nombre,
-//     color,
-//     descripcion,
-//     coordenadas: [
-//       [-16.40 + Math.random() * 0.02, -71.54 + Math.random() * 0.02],
-//       [-16.39 + Math.random() * 0.02, -71.53 + Math.random() * 0.02]
-//     ]
-//   };
-
-//   rutas.push(nuevaRuta);
-//   mostrarRutas();
-//   alert("✅ Ruta agregada correctamente");
-//   e.target.reset();
-// });
-
-// document.getElementById("recargarBtn").addEventListener("click", cargarRutas);
-
-// document.getElementById("limpiarBtn").addEventListener("click", () => {
-//   if (capaRutaActual) map.removeLayer(capaRutaActual);
-// });
