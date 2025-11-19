@@ -9,8 +9,28 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 
-// Test
+// Test servidor
 app.get('/', (req, res) => res.send('Servidor funcionando 🚀'));
+
+// ✅ TEST: Conexión a la BD
+app.get('/test-db', async (req, res) => {
+  try {
+    await sequelize.authenticate();
+    res.json({ ok: true, mensaje: 'Conexión a PostgreSQL exitosa 🎉' });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+// ✅ TEST: Modelos funcionando
+app.get('/test-model', async (req, res) => {
+  try {
+    const rutas = await Ruta.findAll();
+    res.json({ ok: true, total: rutas.length, rutas });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
 
 // Registro
 app.post('/api/registro', async (req, res) => {
@@ -60,6 +80,7 @@ app.post('/api/ruta', async (req, res) => {
   }
 });
 
+// Iniciar servidor
 app.listen(PORT, async () => {
   try {
     await sequelize.sync();

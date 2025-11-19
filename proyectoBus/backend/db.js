@@ -1,15 +1,22 @@
-const { Sequelize } = require('sequelize');
-const RutaModel = require('./models/Ruta');
-const UsuarioModel = require('./models/Usuario');
+// db.js
+import pg from 'pg';
+import dotenv from 'dotenv';
 
-// ⚡ Cambia los valores según tu configuración
-const sequelize = new Sequelize('rutasdb', 'postgres', '2521', {
-  host: 'localhost',
-  dialect: 'postgres',
-  logging: false
+dotenv.config();
+
+const { Pool } = pg;
+
+const pool = new Pool({
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASS || '2521',
+  database: process.env.DB_NAME || 'rutasdb',
+  port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432,
 });
 
-const Ruta = RutaModel(sequelize);
-const Usuario = UsuarioModel(sequelize);
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+  process.exit(-1);
+});
 
-module.exports = { sequelize, Ruta, Usuario };
+export default pool;

@@ -9,8 +9,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middlewares
-app.use(cors()); // permite llamadas desde el frontend (ajusta origen si quieres)
-app.use(express.json({ limit: '1mb' }));
+app.use(cors()); // si quieres restringir, pásale { origin: 'http://localhost:5500' } o similar
+app.use(express.json({ limit: '2mb' }));
 
 // --- Endpoints ---
 
@@ -68,7 +68,6 @@ app.put('/api/updateRuta/:id', async (req, res) => {
   }
 
   try {
-    // Construir actualización dinámica
     const updates = [];
     const values = [];
     let idx = 1;

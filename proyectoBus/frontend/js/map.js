@@ -10,71 +10,76 @@ const baseLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.pn
 });
 baseLayer.addTo(map);
 
-// Variables para control de rutas
+// Variables
 let puntos = [];
 let lineaTemporal = null;
+
+const API_URL = "http://localhost:3000/api/rutas";
 
 // ===============================
 // EVENTO: CLIC EN EL MAPA
 // ===============================
-map.on('click', (e) => {
+map.on("click", (e) => {
   const { lat, lng } = e.latlng;
 
   puntos.push([lat, lng]);
 
-  // Marcador
   L.marker([lat, lng]).addTo(map);
 
-  // Línea temporal
   if (lineaTemporal) map.removeLayer(lineaTemporal);
 
-  lineaTemporal = L.polyline(puntos, { color: 'blue' }).addTo(map);
+  const color = document.getElementById("colorRuta").value;
+
+  lineaTemporal = L.polyline(puntos, { color }).addTo(map);
 });
 
 // ===============================
-// GUARDAR RUTA (localStorage por ahora)
+// GUARDAR RUTA EN BASE DE DATOS
 // ===============================
-document.getElementById('formRuta').addEventListener('submit', (e) => {
+document.getElementById("formRuta").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const nombre = document.getElementById('nombreRuta').value.trim();
+  const nombre = document.getElementById("nombreRuta").value.trim();
+  const descripcion = document.getElementById("descripcionRuta").value.trim();
+  const color = document.getElementById("colorRuta").value;
 
-  if (!nombre) {
-    alert("❗ Debes ingresar un nombre para la ruta.");
-    return;
+  if (!nombre) return alert("❗ Debes ingresar un nombre para la ruta.");
+  if (puntos.length < 2) return alert("❗ Debes agregar al menos 2 puntos en el mapa.");
+
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nombre,
+        descripcion,
+        color,
+        coordenadas: puntos
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || "Error al guardar ruta");
+
+    alert("✅ Ruta guardada correctamente en PostgreSQL.");
+
+    // Reset
+    limpiarMapa();
+    e.target.reset();
+
+    // Actualizar lista de rutas
+    cargarRutas();
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Error conectando con el servidor.");
   }
-
-  if (puntos.length < 2) {
-    alert("❗ La ruta necesita al menos 2 puntos.");
-    return;
-  }
-
-  const ruta = {
-    id: Date.now(),
-    nombre,
-    coordenadas: puntos
-  };
-
-  let lista = JSON.parse(localStorage.getItem('rutas')) || [];
-  lista.push(ruta);
-  localStorage.setItem('rutas', JSON.stringify(lista));
-
-  alert("✅ Ruta almacenada correctamente.");
-
-  // Reset
-  puntos = [];
-  if (lineaTemporal) map.removeLayer(lineaTemporal);
-  lineaTemporal = null;
-  e.target.reset();
 });
 
 // ===============================
-// LIMPIAR EL MAPA
+// LIMPIAR MAPA
 // ===============================
-document.getElementById('limpiarBtn').addEventListener('click', () => {
-  limpiarMapa();
-});
-
 function limpiarMapa() {
   puntos = [];
 
@@ -87,27 +92,52 @@ function limpiarMapa() {
     }
   });
 
-  // Reagregamos capa base
   baseLayer.addTo(map);
 }
 
-// ===============================
-// RECARGAR RUTAS GUARDADAS
-// ===============================
-document.getElementById('recargarBtn').addEventListener('click', () => {
+document.getElementById("limpiarBtn").addEventListener("click", () => {
   limpiarMapa();
-
-  const rutas = JSON.parse(localStorage.getItem('rutas')) || [];
-
-  rutas.forEach(r => {
-    L.polyline(r.coordenadas, { color: 'green' })
-      .addTo(map)
-      .bindPopup(`<b>${r.nombre}</b>`);
-  });
-
-  if (rutas.length === 0) {
-    alert("⚠️ No hay rutas guardadas.");
-  } else {
-    alert("🔄 Rutas cargadas.");
-  }
 });
+
+// ===============================
+// CARGAR RUTAS DESDE POSTGRESQL
+// ===============================
+async function cargarRutas() {
+  const lista = document.getElementById("rutasGuardadas");
+  lista.innerHTML = "";
+
+  try {
+    const res = await fetch(API_URL);
+    const rutas = await res.json();
+
+    if (rutas.length === 0) {
+      lista.innerHTML = "<li>No hay rutas registradas</li>";
+      return;
+    }
+
+    rutas.forEach(r => {
+      // Mostrar polilínea
+      L.polyline(r.coordenadas, { color: r.color }).addTo(map)
+        .bindPopup(`<b>${r.nombre}</b><br>${r.descripcion || ""}`);
+
+      // Agregar a la lista
+      const li = document.createElement("li");
+      li.textContent = r.nombre;
+      lista.appendChild(li);
+    });
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Error cargando rutas.");
+  }
+}
+
+document.getElementById("recargarBtn").addEventListener("click", () => {
+  limpiarMapa();
+  cargarRutas();
+});
+
+// ===============================
+// Cargar rutas automáticamente al abrir
+// ===============================
+cargarRutas();
