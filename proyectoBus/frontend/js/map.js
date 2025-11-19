@@ -1,199 +1,147 @@
-const map = L.map('map').setView([-16.3989, -71.535], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19
+// ===============================
+// CONFIGURACIÓN DEL MAPA
+// ===============================
+const map = L.map("map").setView([-16.3989, -71.535], 13);
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
 }).addTo(map);
 
-let rutas = [];
-let rutaActual = null;
-let polyline = null;
-let drawnItems = new L.FeatureGroup();
-let layerGroup = new L.FeatureGroup();
-let tempGroup = new L.FeatureGroup();
+// Capa base
+const baseLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '© OpenStreetMap contributors'
+});
+baseLayer.addTo(map);
 
-map.addLayer(drawnItems);
-map.addLayer(layerGroup);
-map.addLayer(tempGroup);
+// Variables
+let puntos = [];
+let lineaTemporal = null;
 
-const drawControl = new L.Control.Draw({
-  draw: {
-    polygon: false,
-    marker: false,
-    circle: false,
-    rectangle: false,
-    circlemarker: false,
-    polyline: true
-  },
-  edit: false
+const API_URL = "http://localhost:3000/api/rutas";
+
+// ===============================
+// EVENTO: CLIC EN EL MAPA
+// ===============================
+map.on("click", (e) => {
+  const { lat, lng } = e.latlng;
+
+  puntos.push([lat, lng]);
+
+  L.marker([lat, lng]).addTo(map);
+
+  if (lineaTemporal) map.removeLayer(lineaTemporal);
+
+  const color = document.getElementById("colorRuta").value;
+
+  lineaTemporal = L.polyline(puntos, { color }).addTo(map);
 });
 
-// Editar ruta
-document.getElementById('editarRutaBtn')?.addEventListener('click', () => {
-  if (!rutaActual) return alert('Selecciona una ruta primero.');
-  map.addControl(drawControl);
-  document.getElementById('guardarRutaBtn').disabled = false;
-  alert('Dibuja la nueva ruta sobre el mapa.');
-});
+// ===============================
+// GUARDAR RUTA EN BASE DE DATOS
+// ===============================
+document.getElementById("formRuta").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-map.on(L.Draw.Event.CREATED, (event) => {
-  drawnItems.clearLayers();
-  const layer = event.layer;
-  drawnItems.addLayer(layer);
-});
+  const nombre = document.getElementById("nombreRuta").value.trim();
+  const descripcion = document.getElementById("descripcionRuta").value.trim();
+  const color = document.getElementById("colorRuta").value;
 
-// 🗺️ Cargar y mostrar rutas
-async function cargarRutas() {
-  const lista = document.getElementById("listaRutas");
-  if (lista) {
-    lista.innerHTML = "<li>Cargando rutas...</li>";
-  }
+  if (!nombre) return alert("❗ Debes ingresar un nombre para la ruta.");
+  if (puntos.length < 2) return alert("❗ Debes agregar al menos 2 puntos en el mapa.");
 
   try {
-    const res = await fetch("http://localhost:3000/api/rutas");
-    if (!res.ok) throw new Error("Error al cargar rutas");
-    rutas = await res.json();
-
-    layerGroup.clearLayers();
-    if (lista) lista.innerHTML = "";
-
-    const colores = ["blue", "red", "green", "orange", "purple"];
-
-    rutas.forEach((ruta, i) => {
-      const coords = Array.isArray(ruta.coordenadas)
-        ? ruta.coordenadas
-        : JSON.parse(ruta.coordenadas || "[]");
-
-      if (!coords.length) return;
-
-      const color = colores[i % colores.length];
-      const polyline = L.polyline(coords, { color, weight: 4 }).addTo(layerGroup);
-
-      const iconoInicio = L.icon({
-        iconUrl: 'img/inicio.png',
-        iconSize: [32, 32],
-      });
-
-      const iconoFin = L.icon({
-        iconUrl: 'img/fin.png',
-        iconSize: [32, 32],
-      });
-
-      L.marker(coords[0], { icon: iconoInicio })
-        .addTo(layerGroup)
-        .bindPopup(`Inicio: ${ruta.nombre}`);
-
-      L.marker(coords[coords.length - 1], { icon: iconoFin })
-        .addTo(layerGroup)
-        .bindPopup(`Fin: ${ruta.nombre}`);
-
-      polyline.on("click", () => {
-        rutaActual = ruta;
-        tempGroup.clearLayers();
-        coords.forEach((p, idx) => {
-          L.marker(p).addTo(tempGroup).bindPopup(`Punto ${idx + 1}`);
-        });
-        L.polyline(coords, { color: "gray", dashArray: "5,5" }).addTo(tempGroup);
-        alert(`Editando: ${ruta.nombre}`);
-      });
-
-      if (lista) {
-        const item = document.createElement("li");
-        item.textContent = ruta.nombre;
-        item.onclick = () => {
-          map.fitBounds(polyline.getBounds());
-          rutaActual = ruta;
-        };
-        lista.appendChild(item);
-      }
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nombre,
+        descripcion,
+        color,
+        coordenadas: puntos
+      })
     });
 
-  } catch (error) {
-    console.error("Error al cargar rutas:", error);
-    if (lista) lista.innerHTML = "<li>Error al cargar rutas</li>";
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || "Error al guardar ruta");
+
+    alert("✅ Ruta guardada correctamente en PostgreSQL.");
+
+    // Reset
+    limpiarMapa();
+    e.target.reset();
+
+    // Actualizar lista de rutas
+    cargarRutas();
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Error conectando con el servidor.");
+  }
+});
+
+// ===============================
+// LIMPIAR MAPA
+// ===============================
+function limpiarMapa() {
+  puntos = [];
+
+  if (lineaTemporal) map.removeLayer(lineaTemporal);
+  lineaTemporal = null;
+
+  map.eachLayer(layer => {
+    if (layer instanceof L.Marker || layer instanceof L.Polyline) {
+      map.removeLayer(layer);
+    }
+  });
+
+  baseLayer.addTo(map);
+}
+
+document.getElementById("limpiarBtn").addEventListener("click", () => {
+  limpiarMapa();
+});
+
+// ===============================
+// CARGAR RUTAS DESDE POSTGRESQL
+// ===============================
+async function cargarRutas() {
+  const lista = document.getElementById("rutasGuardadas");
+  lista.innerHTML = "";
+
+  try {
+    const res = await fetch(API_URL);
+    const rutas = await res.json();
+
+    if (rutas.length === 0) {
+      lista.innerHTML = "<li>No hay rutas registradas</li>";
+      return;
+    }
+
+    rutas.forEach(r => {
+      // Mostrar polilínea
+      L.polyline(r.coordenadas, { color: r.color }).addTo(map)
+        .bindPopup(`<b>${r.nombre}</b><br>${r.descripcion || ""}`);
+
+      // Agregar a la lista
+      const li = document.createElement("li");
+      li.textContent = r.nombre;
+      lista.appendChild(li);
+    });
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Error cargando rutas.");
   }
 }
 
-// Mostrar ruta seleccionada
-document.getElementById('rutasSelect')?.addEventListener('change', (e) => {
-  const id = e.target.value;
-  if (polyline) map.removeLayer(polyline);
-  if (!id) {
-    rutaActual = null;
-    document.getElementById('guardarRutaBtn').disabled = true;
-    document.getElementById('eliminarRutaBtn').disabled = true;
-    return;
-  }
-
-  const ruta = rutas.find(r => r.id == id);
-  if (!ruta) return;
-
-  const coords = Array.isArray(ruta.coordenadas) ? ruta.coordenadas : JSON.parse(ruta.coordenadas);
-  polyline = L.polyline(coords, { color: 'blue' }).addTo(map);
-  map.fitBounds(polyline.getBounds());
-  rutaActual = ruta;
-
-  document.getElementById('eliminarRutaBtn').disabled = false;
+document.getElementById("recargarBtn").addEventListener("click", () => {
+  limpiarMapa();
+  cargarRutas();
 });
 
-// Guardar ruta editada
-document.getElementById('guardarRutaBtn')?.addEventListener('click', async () => {
-  if (!rutaActual) return alert('Primero selecciona una ruta.');
-  if (drawnItems.getLayers().length === 0) return alert('Dibuja una nueva ruta primero.');
-
-  const nuevaRuta = drawnItems.getLayers()[0];
-  const latlngs = nuevaRuta.getLatLngs().map(ll => [ll.lat, ll.lng]);
-
-  try {
-    const res = await fetch(`http://localhost:3000/api/updateRuta/${rutaActual.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ coordenadas: latlngs })
-    });
-
-    if (res.ok) {
-      alert('Ruta actualizada correctamente.');
-      drawnItems.clearLayers();
-      map.removeControl(drawControl);
-      document.getElementById('guardarRutaBtn').disabled = true;
-      cargarRutas();
-    } else {
-      alert('Error al actualizar la ruta.');
-    }
-  } catch (error) {
-    alert('Error de red al actualizar la ruta.');
-  }
-});
-
-// Eliminar ruta
-document.getElementById('eliminarRutaBtn')?.addEventListener('click', async () => {
-  if (!rutaActual) return alert('Selecciona una ruta para eliminar.');
-
-  const confirmar = confirm(`¿Seguro que deseas eliminar la ruta "${rutaActual.nombre}"?`);
-  if (!confirmar) return;
-
-  try {
-    const res = await fetch(`http://localhost:3000/api/deleteRuta/${rutaActual.id}`, {
-      method: 'DELETE'
-    });
-
-    if (res.ok) {
-      alert('Ruta eliminada correctamente.');
-      if (polyline) map.removeLayer(polyline);
-      rutaActual = null;
-      document.getElementById('guardarRutaBtn').disabled = true;
-      document.getElementById('eliminarRutaBtn').disabled = true;
-      cargarRutas();
-    } else {
-      alert('Error al eliminar la ruta.');
-    }
-  } catch (error) {
-    alert('Error de red al eliminar la ruta.');
-  }
-});
-
-// Inicial
-//Ejecutar codigo para la localizacion en el mapa
-//Editar las rutas de los vehiculos
-//Agregar nuevas rutas por medio de un mapa interactivo en vez de coordenadas
-//Previsualizar las rutas en un mapa para confirmar sus paramteros
-//Planificar rutas respecto a los destinos mas concurridos
-//Fijar puntos intermedios para abordar distintos vehiculos
+// ===============================
+// Cargar rutas automáticamente al abrir
+// ===============================
+cargarRutas();

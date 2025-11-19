@@ -1,15 +1,11 @@
-const { Sequelize } = require('sequelize');
-const RutaModel = require('./models/Ruta');
-const UsuarioModel = require('./models/Usuario');
+const { Pool } = require("pg");
 
-// ⚡ Cambia los valores según tu configuración
-const sequelize = new Sequelize('rutasdb', 'postgres', '2521', {
-  host: 'localhost',
-  dialect: 'postgres',
-  logging: false
+const pool = new Pool({
+  user: "postgres",
+  host: "localhost",
+  database: "rutasdb",
+  password: "2521",
+  port: 5432
 });
 
-const Ruta = RutaModel(sequelize);
-const Usuario = UsuarioModel(sequelize);
-
-module.exports = { sequelize, Ruta, Usuario };
+module.exports = pool;
