@@ -1,7 +1,11 @@
 // ===============================
 // CONFIGURACIÓN DEL MAPA
 // ===============================
-const map = L.map('map').setView([-16.3989, -71.535], 13);
+const map = L.map("map").setView([-16.3989, -71.535], 13);
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19,
+}).addTo(map);
 
 // Capa base
 const baseLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
